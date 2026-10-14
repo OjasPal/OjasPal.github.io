@@ -126,8 +126,8 @@ export const projects: Project[] = [
     image: "/projects/evalai.webp",
     links: {
       live: null,
-      code: null,
-      video: null,
+      code: "https://github.com/OjasPal/EvalAI",
+      video: "https://youtu.be/BvUrBhxuUrc",
     },
   },
 ];

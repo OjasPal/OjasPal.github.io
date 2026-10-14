@@ -40,7 +40,7 @@ export function Navbar() {
 
   return (
     <>
-      <a href="#projects" className="skip-link">
+      <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 

@@ -6,7 +6,7 @@ export interface SkillCategory {
 export const skillCategories: SkillCategory[] = [
   {
     category: "Languages",
-    items: ["Python", "C++", "JavaScript"],
+    items: ["Python", "C++"],
   },
   {
     category: "Generative AI",
@@ -17,12 +17,14 @@ export const skillCategories: SkillCategory[] = [
       "Gemini API",
       "Ollama",
       "HuggingFace",
-      "RoBERTa",
     ],
   },
   {
     category: "ML & Deep Learning",
-    items: ["PyTorch", "TensorFlow", "scikit-learn", "OpenCV", "Pandas"],
+    items: ["PyTorch", "TensorFlow", "scikit-learn", "OpenCV", "RoBERTa", "Pandas"],
+  },
+  { category: "Concepts", 
+    items: ["Computer Vision", "NLP", "Recommender Systems"],
   },
   {
     category: "Cloud & Data",
@@ -35,10 +37,10 @@ export const skillCategories: SkillCategory[] = [
   },
   {
     category: "Backend & UI",
-    items: ["FastAPI", "Flask", "Express.js", "React", "Streamlit"],
+    items: ["FastAPI", "Flask", "Streamlit"],
   },
   {
     category: "Tools",
-    items: ["Git & GitHub"],
+    items: ["Git & GitHub", "Jupyter Notebook"],
   },
 ];
