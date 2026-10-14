@@ -10,7 +10,11 @@ import { useFinePointer } from "../../hooks/useFinePointer";
 
 export function HeroArt() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [imageError, setImageError] = useState(false);
+  
+  // Track errors for both main and fallback images
+  const [mainError, setMainError] = useState(false);
+  const [fallbackError, setFallbackError] = useState(false);
+
   const isFinePointer = useFinePointer();
   const prefersReducedMotion = useReducedMotion();
 
@@ -39,14 +43,16 @@ export function HeroArt() {
     mouseY.set(0);
   };
 
-  const heroArtSrc = `${import.meta.env.BASE_URL}hero/hero-art.webp`;
+  // Image paths
+  const mainArtSrc = `${import.meta.env.BASE_URL}hero/hero-art.webp`;
+  const fallbackArtSrc = `${import.meta.env.BASE_URL}hero/hero-art-fallback.webp`;
 
   return (
     <div
       ref={containerRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
-      className="relative w-full max-w-[540px] aspect-square mx-auto flex items-center justify-center select-none"
+      className="relative w-full max-w-[540px] aspect-square mx-auto flex items-center justify-center select-none overflow-hidden"
     >
       {/* 6s Breathing Radial Cyan Glow behind art */}
       <motion.div
@@ -57,10 +63,10 @@ export function HeroArt() {
             : { opacity: [0.35, 0.65, 0.35] }
         }
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-4 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.25)_0%,rgba(56,189,248,0.06)_45%,transparent_75%)] pointer-events-none blur-2xl"
+        className="absolute inset-4 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.3)_0%,rgba(56,189,248,0.08)_45%,transparent_75%)] pointer-events-none blur-2xl"
       />
 
-      {/* Floating and Parallaying Art Container with Radial Edge Mask */}
+      {/* Floating and Parallaying Art Container */}
       <motion.div
         style={
           isFinePointer && !prefersReducedMotion
@@ -77,22 +83,36 @@ export function HeroArt() {
         transition={{
           y: { duration: 8, repeat: Infinity, ease: "easeInOut" },
         }}
-        className="relative w-full h-full flex items-center justify-center [mask-image:radial-gradient(circle_at_center,black_45%,transparent_80%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_45%,transparent_80%)]"
+        className="relative w-full h-full flex items-center justify-center [mask-image:radial-gradient(circle_at_center,black_50%,transparent_82%)] [-webkit-mask-image:radial-gradient(circle_at_center,black_50%,transparent_82%)]"
       >
-        {!imageError ? (
+        {/* 1. Primary Choice: Try Main hero-art.webp */}
+        {!mainError ? (
           <img
-            src={heroArtSrc}
-            alt=""
+            src={mainArtSrc}
+            alt="Generative AI Art"
             aria-hidden="true"
             width={600}
             height={600}
             fetchPriority="high"
             loading="eager"
-            onError={() => setImageError(true)}
-            className="w-full h-full object-contain filter drop-shadow-[0_0_40px_rgba(56,189,248,0.35)]"
+            onError={() => setMainError(true)}
+            className="w-full h-full object-cover scale-110 filter drop-shadow-[0_0_50px_rgba(56,189,248,0.3)]"
+          />
+        ) : /* 2. Secondary Choice: Try hero-art-fallback.webp if main fails */
+        !fallbackError ? (
+          <img
+            src={fallbackArtSrc}
+            alt="Generative AI Art Fallback"
+            aria-hidden="true"
+            width={600}
+            height={600}
+            fetchPriority="high"
+            loading="eager"
+            onError={() => setFallbackError(true)}
+            className="w-full h-full object-cover scale-100 filter drop-shadow-[0_0_50px_rgba(56,189,248,0.3)]"
           />
         ) : (
-          /* CSS-Only Graceful Fallback if image fails to load */
+          /* 3. Final Fallback: Pure CSS sphere if BOTH image files fail */
           <div
             aria-hidden="true"
             className="w-4/5 h-4/5 rounded-full relative flex items-center justify-center bg-[#0B0C10] border border-[#1E2430]"
@@ -114,7 +134,7 @@ export function HeroArt() {
         className="hidden sm:block absolute inset-12 rounded-full border border-[#38BDF8]/10 pointer-events-none border-dashed"
       />
 
-      {/* 8 CSS Particles (hidden on mobile and under reduced motion) */}
+      {/* CSS Particles */}
       {!prefersReducedMotion && (
         <div aria-hidden="true" className="hidden md:block pointer-events-none absolute inset-0">
           {[

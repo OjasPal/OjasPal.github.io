@@ -22,10 +22,6 @@ export function Footer() {
             </div>
           </div>
 
-          <p className="text-xs text-[#8A90A0] text-center sm:text-right">
-            Built with React, Vite and Motion. Hosted on GitHub Pages.
-          </p>
-
           <button
             onClick={scrollToTop}
             aria-label="Back to top"
