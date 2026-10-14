@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" fill="none">
+  <!-- Rounded-square structural border -->
+  <rect x="1" y="1" width="34" height="34" rx="8" fill="#12141C" stroke="#1E2430" stroke-width="1.5" />
+  
+  <!-- Geometric OP Monogram -->
+  <!-- Ring O -->
+  <circle cx="14" cy="18" r="6.5" stroke="#F2F4F8" stroke-width="2" />
+  
+  <!-- P Stem sharing stroke and loop -->
+  <path d="M20.5 11.5V24.5" stroke="#F2F4F8" stroke-width="2" stroke-linecap="round" />
+  <path d="M20.5 11.5H24.5C26.5 11.5 28 13 28 15C28 17 26.5 18.5 24.5 18.5H20.5" stroke="#F2F4F8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Accent Luminescent Cyan Dot -->
+  <circle cx="28" cy="24.5" r="1.5" fill="#38BDF8" />
+</svg>

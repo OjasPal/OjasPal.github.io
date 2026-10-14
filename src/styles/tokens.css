@@ -1,0 +1,12 @@
+:root {
+  --bg: #0B0C10;          /* Obsidian Matte: page background */
+  --surface: #12141C;     /* Onyx Glass: cards, containers */
+  --text: #F2F4F8;        /* Soft Platinum: headlines, primary text */
+  --muted: #8A90A0;       /* Muted Slate: captions, metadata, secondary text */
+  --accent: #38BDF8;      /* Luminescent Cyan: used selectively */
+  --border: #1E2430;      /* Sub-Zero Border: 1px lines */
+  --accent-glow: rgba(56, 189, 248, 0.40);
+  --accent-line: rgba(56, 189, 248, 0.25);
+  --accent-soft: rgba(56, 189, 248, 0.08);
+  --surface-glass: rgba(18, 20, 28, 0.72);
+}
