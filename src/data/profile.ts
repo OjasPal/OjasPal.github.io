@@ -55,15 +55,15 @@ export const profile: Profile = {
   proofStats: [
     {
       value: "93.6%",
-      caption: "validation accuracy, 46-breed image classifier",
+      caption: "validation accuracy telling 46 cat and dog breeds apart (ML-DL Portfolio)",
     },
     {
-      value: "<45 ms",
-      caption: "top-2 vector lookups on Pinecone",
+      value: "9 / 9",
+      caption: "API endpoints locked behind verified login (Personal Gemini Journal)",
     },
     {
-      value: "25 to 30 ms",
-      caption: "CPU inference on Streamlit Cloud",
+      value: "3",
+      caption: "deployed apps you can open and try right now",
     },
   ],
 };

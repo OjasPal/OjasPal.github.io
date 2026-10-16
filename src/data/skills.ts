@@ -21,7 +21,7 @@ export const skillCategories: SkillCategory[] = [
   },
   {
     category: "ML & Deep Learning",
-    items: ["PyTorch", "TensorFlow", "scikit-learn", "OpenCV", "RoBERTa", "Pandas"],
+    items: ["PyTorch", "TensorFlow", "scikit-learn", "OpenCV", "Transformer Models", "Pandas"],
   },
   { category: "Concepts", 
     items: ["Computer Vision", "NLP", "Recommender Systems"],

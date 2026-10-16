@@ -1,4 +1,4 @@
-import { GraduationCap, Users, Award } from "lucide-react";
+import { GraduationCap, Users, Award, ArrowUpRight } from "lucide-react";
 import { certifications, timeline } from "../../data/credentials";
 import { Section } from "../layout/Section";
 import { Reveal } from "../ui/Reveal";
@@ -38,9 +38,11 @@ export function Credentials() {
 
                     <div className="p-6 rounded-2xl bg-[#12141C] border border-[#1E2430] hover:border-[#38BDF8]/40 transition-colors">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                        <span className="font-mono text-xs font-semibold text-[#38BDF8]">
-                          {item.period || item.status}
-                        </span>
+                        {item.period && (
+                          <span className="font-mono text-xs font-semibold text-[#38BDF8]">
+                            {item.period}
+                          </span>
+                        )}
                         {item.status && (
                           <span className="px-2 py-0.5 rounded-full bg-[#38BDF8]/10 text-[#38BDF8] text-[11px] font-mono font-medium">
                             {item.status}
@@ -90,6 +92,27 @@ export function Credentials() {
                       <p className="text-xs font-mono text-[#8A90A0] mt-1.5">
                         Issuer: {cert.issuer}
                       </p>
+                      {cert.date && (
+                        <p className="text-xs font-mono text-[#8A90A0] mt-1">
+                          {cert.date}
+                        </p>
+                      )}
+                      {cert.href && (
+                        <a
+                          href={
+                            cert.href.startsWith("http")
+                              ? cert.href
+                              : `${import.meta.env.BASE_URL}${cert.href}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`View certificate: ${cert.title} (opens in a new tab)`}
+                          className="group inline-flex items-center gap-1.5 mt-3 min-h-[44px] text-xs sm:text-sm font-medium text-[#38BDF8] hover:text-[#F2F4F8] transition-colors"
+                        >
+                          <span>View certificate</span>
+                          <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
