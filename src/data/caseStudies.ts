@@ -1,0 +1,1361 @@
+export interface ArchitectureNode {
+  id: string;
+  label: string;
+  lane: string;
+  responsibility: string;
+  inputs?: string[];
+  outputs?: string[];
+  technologies: string[];
+  details: string;
+  sourceLink?: string;
+  isTrustBoundaryGate?: boolean;
+}
+
+export interface ArchitectureEdge {
+  from: string;
+  to: string;
+  label: string;
+}
+
+export interface EngineeringDecision {
+  context: string;
+  choice: string;
+  alternatives: string[];
+  rationale: string;
+  tradeOff: string;
+}
+
+export interface ProblemSolved {
+  issue: string;
+  rootCause: string;
+  resolution: string;
+}
+
+export interface MetricItem {
+  label: string;
+  value: string;
+  context: string;
+}
+
+export interface TechnicalConstant {
+  parameter: string;
+  value: string;
+  scope: string;
+  notes: string;
+}
+
+export interface SubProjectRow {
+  index: string;
+  title: string;
+  domain: string;
+  approach: string;
+  liveUrl: string;
+}
+
+export interface CollaboratorInfo {
+  name: string;
+  linkedinUrl: string;
+  roleNote: string;
+}
+
+export interface SourceCodeRef {
+  label: string;
+  url: string;
+}
+
+export interface CaseStudy {
+  slug: string;
+  index: string;
+  title: string;
+  period: string;
+  domainTag: string;
+  tagline: string;
+  plainDescription: string;
+  problemStatement: string;
+  eventContext?: string;
+  headlineMetrics: MetricItem[];
+  links: {
+    live: string | null;
+    code: string | null;
+    video: string | null;
+  };
+  image: string;
+  collaborator?: CollaboratorInfo;
+  whatIDid: {
+    wordingNote: string;
+    items: string[];
+  };
+  architecture: {
+    summary: string;
+    trustBoundaryDescription?: string;
+    nodes: ArchitectureNode[];
+    edges: ArchitectureEdge[];
+  };
+  decisions: EngineeringDecision[];
+  problemsSolved: ProblemSolved[];
+  securityAndQuality: {
+    summary: string;
+    rules: string[];
+  };
+  limitations: string[];
+  subProjects?: SubProjectRow[];
+  appendix: {
+    constants: TechnicalConstant[];
+    models?: {
+      primary: string;
+      fallback?: string;
+      role: string;
+    }[];
+    iamRoles?: {
+      role: string;
+      purpose: string;
+    }[];
+    endpointsSummary?: string;
+    sourceReferences: SourceCodeRef[];
+  };
+}
+
+export const projectOrder = [
+  "personal-gemini-journal",
+  "medical-rag-chatbot",
+  "ml-dl-portfolio",
+  "evalai",
+];
+
+export const caseStudies: Record<string, CaseStudy> = {
+  "personal-gemini-journal": {
+    slug: "personal-gemini-journal",
+    index: "01",
+    title: "Personal Gemini Journal",
+    period: "September 2026",
+    domainTag: "Generative AI & Cloud Architecture",
+    tagline:
+      "A per-user AI journal where Gemini remembers earlier entries across sessions.",
+    plainDescription:
+      "Sign in with Google, write journal entries, and converse with Gemini regarding them. Each user's entries and memories are isolated under their own authenticated account path. The AI draws on recent entries and relevant older memories when formulating responses, with an 'Ask My Journal' feature to query past entries.",
+    problemStatement:
+      "Many rapidly prototyped generative AI applications ship with hardcoded credentials, client-side model calls, shared databases, and no strict authentication boundary. This project was engineered security-first with an explicit rulebook that every backend endpoint was reviewed against.",
+    eventContext:
+      "Built for the #AccelerateAIwithCloudRun ideathon (Google Cloud Gen AI Academy, APAC).",
+    headlineMetrics: [
+      {
+        label: "Verified Endpoints",
+        value: "9 / 9",
+        context:
+          "REST endpoints verified server-side with checkRevoked token validation",
+      },
+      {
+        label: "Runtime IAM Roles",
+        value: "3 Roles",
+        context:
+          "Granted to the Cloud Run runtime service account with no file-based keys",
+      },
+    ],
+    links: {
+      live: "https://journal-frontend-931033287675.us-central1.run.app",
+      code: "https://github.com/OjasPal/Personal-Gemini-Journal",
+      video: "https://youtu.be/dzPP3nAXzfA",
+    },
+    image: "/projects/personal-gemini-journal.webp",
+    whatIDid: {
+      wordingNote:
+        "Responsibilities reflect system specification, security rule definition, infrastructure deployment, and code review.",
+      items: [
+        "Defined the security requirements: a written rulebook of seven non-negotiable rules (server-side token verification, per-user data isolation, secrets in Secret Manager, server-side input validation, least-privilege IAM, pinned dependencies, no leaked errors) that every endpoint was reviewed against.",
+        "Specified the features and architecture: the two-service Cloud Run layout, the Firebase Auth token exchange flow, and the memory ranking design.",
+        "Reviewed the backend implementation, identifying outdated model identifiers and incorrect dependency versions during review cycles.",
+        "Configured and managed cloud infrastructure: Google Cloud and Firebase setup, IAM permissions, Secret Manager lifecycle, Cloud Run deployments, and production runtime debugging.",
+      ],
+    },
+    architecture: {
+      summary:
+        "Divided across two Cloud Run services: a static React client and an Express backend proxy. All persistent data lives in Firestore partitioned under users/{uid}/entries and users/{uid}/memories.",
+      trustBoundaryDescription:
+        "A strict trust boundary separates the public browser client from the backend. The client never talks directly to Firestore or Secret Manager; the backend extracts UID only from the verified cryptographic ID token.",
+      nodes: [
+        {
+          id: "client",
+          label: "React Client",
+          lane: "Browser",
+          responsibility:
+            "Serves the single-page application interface, triggers Firebase Google authentication, and renders sanitized Markdown responses.",
+          technologies: ["React", "Vite", "Tailwind CSS", "Framer Motion"],
+          inputs: ["User journal reflections", "Query prompts"],
+          outputs: ["HTTPS requests with Bearer ID token"],
+          details:
+            "Replaced the initial single-file prototype. Formats Gemini responses using marked and DOMPurify.",
+        },
+        {
+          id: "auth-gate",
+          label: "Auth & Rate Limit Gate",
+          lane: "Backend (Cloud Run)",
+          responsibility:
+            "Enforces trust boundary: checks token revocation with Firebase Admin SDK, extracts UID, and executes token-bucket throttling.",
+          technologies: ["Node.js", "Express", "Firebase Admin SDK"],
+          inputs: ["HTTP Bearer Authorization header"],
+          outputs: ["Verified UID context (users/{uid})", "401/429 status on failure"],
+          details:
+            "Every one of the 9 REST endpoints calls checkRevoked. In-memory token-bucket allows 10 burst requests, replenishing 1 token every 6 seconds.",
+          sourceLink:
+            "https://github.com/OjasPal/Personal-Gemini-Journal/blob/master/backend/server.js",
+          isTrustBoundaryGate: true,
+        },
+        {
+          id: "secret-mgr",
+          label: "Secret Manager Client",
+          lane: "Google Cloud Services",
+          responsibility:
+            "Securely serves the Gemini API key without embedding tokens in files, container images, or environment variables.",
+          technologies: ["Google Cloud Secret Manager", "IAM Accessor Role"],
+          inputs: ["Secret version request from authenticated backend"],
+          outputs: ["API credential string"],
+          details:
+            "The key is retrieved over internal Google APIs and cached in backend process memory for 3,600 seconds (1 hour).",
+        },
+        {
+          id: "memory-engine",
+          label: "Context & Memory Engine",
+          lane: "Backend (Cloud Run)",
+          responsibility:
+            "Retrieves past context by reading the last 3 journal entries and ranking up to 30 stored candidate memories.",
+          technologies: ["Cosine similarity", "Keyword score ranking", "Firestore SDK"],
+          inputs: ["Incoming entry", "User ID"],
+          outputs: ["Context payload capped at snippet limits"],
+          details:
+            "Context combines the 3 most recent entries (200 char cap each) with up to 30 scored memories (350 char cap each) into an XML-delimited prompt payload.",
+          sourceLink:
+            "https://github.com/OjasPal/Personal-Gemini-Journal/blob/master/backend/server.js",
+        },
+        {
+          id: "gemini-api",
+          label: "Gemini Model Service",
+          lane: "Google Cloud Services",
+          responsibility:
+            "Processes structured conversational reasoning against user journal context, with retry and model fallback.",
+          technologies: ["gemini-3.6-flash (primary)", "gemini-3.5-flash-lite (fallback)"],
+          inputs: ["XML-delimited prompt with untrusted text tagging"],
+          outputs: ["Reflective response text", "Extracted memory candidate"],
+          details:
+            "Primary calls target gemini-3.6-flash. If the primary model encounters transient errors, requests automatically fall back to gemini-3.5-flash-lite.",
+        },
+        {
+          id: "firestore",
+          label: "Cloud Firestore",
+          lane: "Google Cloud Services",
+          responsibility:
+            "Stores journal documents and memory records under per-user isolated collections.",
+          technologies: ["Google Cloud Firestore", "Serverless NoSQL"],
+          inputs: ["Indexed write batches under users/{uid}"],
+          outputs: ["User document streams"],
+          details:
+            "All document access paths are hardcoded to users/{uid}/entries and users/{uid}/memories, precluding cross-tenant leakage.",
+        },
+      ],
+      edges: [
+        { from: "client", to: "auth-gate", label: "Bearer ID Token" },
+        { from: "auth-gate", to: "secret-mgr", label: "Fetch Key (1h cache)" },
+        { from: "auth-gate", to: "memory-engine", label: "Verified UID" },
+        { from: "memory-engine", to: "firestore", label: "Read Recent + Stored" },
+        { from: "memory-engine", to: "gemini-api", label: "XML-Delimited Context" },
+        { from: "gemini-api", to: "firestore", label: "Save Entry & Memory" },
+        { from: "auth-gate", to: "client", label: "Sanitized Response" },
+      ],
+    },
+    decisions: [
+      {
+        context: "API Key Security & Client Communication",
+        choice: "Dedicated Express backend proxy on Cloud Run",
+        alternatives: ["Direct client-side Gemini API calls from browser"],
+        rationale:
+          "Direct browser calls require embedding or leaking API credentials into client JavaScript. A backend proxy acts as the single point of enforcement for token verification, rate limiting, and sanitization.",
+        tradeOff:
+          "Requires maintaining and paying for a containerized backend service rather than a purely static web host.",
+      },
+      {
+        context: "Credential Storage & Retrieval",
+        choice: "Google Cloud Secret Manager with IAM service account binding",
+        alternatives: [".env configuration files", "Downloaded service account JSON keys"],
+        rationale:
+          "Keeps production keys entirely outside the git repository and container image layers. Downloading JSON keys was also restricted by organization policies.",
+        tradeOff:
+          "Introduces an internal API latency hop on cold startup before the in-memory cache populates.",
+      },
+      {
+        context: "Memory & Similarity Scoring",
+        choice:
+          "In-process ranking of Firestore documents using cosine similarity and keyword matching",
+        alternatives: ["Dedicated vector database (Pinecone, Chroma, pgvector)"],
+        rationale:
+          "Eliminates the cost and operational overhead of an external vector database for a small-scale prototype where personal journals contain dozens to low hundreds of entries.",
+        tradeOff:
+          "Does not scale to thousands of entries per user; candidate sets must be capped at 30 items.",
+      },
+      {
+        context: "Frontend Hosting",
+        choice: "Containerized deployment on Google Cloud Run",
+        alternatives: ["Firebase Hosting", "Static CDN"],
+        rationale:
+          "The APAC Gen AI Academy ideathon rules explicitly required deployment workloads to run on Cloud Run.",
+        tradeOff:
+          "Slightly slower cold boot compared to static edge CDN caching.",
+      },
+      {
+        context: "Backend Authorization Boundary",
+        choice: "Firebase Admin SDK verifying user tokens in application code",
+        alternatives: ["Client-direct Firestore Security Rules"],
+        rationale:
+          "Because the backend connects via Firebase Admin SDK (which bypasses Firestore client rules), the Express verification middleware that derives UID strictly from verified tokens serves as the true security perimeter.",
+        tradeOff:
+          "Security relies entirely on backend route middleware correctness rather than declarative database rules.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue: "Cloud Run Build & Deployment Failures",
+        rootCause:
+          "The default Cloud Run compute service account lacked IAM permissions for Artifact Registry, Cloud Storage, and Logging, and the repository lacked an explicit npm start script.",
+        resolution:
+          "Granted the required IAM roles to the deployment service account and configured an explicit start command in package.json.",
+      },
+      {
+        issue: "Production 401 Unauthorized Responses",
+        rootCause:
+          "The backend service account lacked permissions to verify Firebase Auth ID tokens against the project authentication service. Initial diagnosis incorrectly suspected client-side token generation.",
+        resolution:
+          "Diagnosed error logs and assigned the firebaseauth.admin role to the runtime service account.",
+      },
+      {
+        issue: "Gemini Model Failures & Truncated API Keys",
+        rootCause:
+          "Encountered a deprecated model name, trial quota limits, and a corrupted Secret Manager value caused by an unintentional trailing '-n' flag during CLI creation.",
+        resolution:
+          "Updated the model identifier to gemini-3.6-flash, switched to a free-tier key, and recreated the Secret Manager payload cleanly.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "The application architecture strictly separates untrusted user input from execution context, with non-negotiable verification gates on every network boundary.",
+      rules: [
+        "Server-side token verification: Every single one of the 9 REST endpoints verifies the Firebase ID token with checkRevoked enabled to immediately invalidate signed-out sessions.",
+        "Strict path derivation: The user UID is derived exclusively from the cryptographically verified token; document paths are constructed as users/{uid}/... and never accepted from request parameters.",
+        "Secret isolation: The Gemini API key is fetched directly from Secret Manager via IAM credentials, cached in memory for one hour, with no fallback to environment variables.",
+        "Minimal IAM scope: The runtime service account is restricted to three targeted roles: secretmanager.secretAccessor, datastore.user, and firebaseauth.admin.",
+        "Input sanitization: Incoming messages are limited to 4,000 characters (questions to 500 characters); control characters are stripped and whitespace collapsed.",
+        "Rate limiting: Per-user token-bucket algorithm enforces a burst ceiling of 10 requests, refilling at 1 token every 6 seconds.",
+        "Log scrubbing: The server logger explicitly purges apiKey, idToken, prompt, message, question, content, and raw exception stacks before writing to stdout.",
+        "Untrusted prompt framing: Prompt structure explicitly commands the Gemini model to treat conversation history and recalled memories as untrusted user text.",
+      ],
+    },
+    limitations: [
+      "No automated end-to-end test suite; user isolation was verified through manual multi-account validation.",
+      "The token-bucket rate limiter and Secret Manager key cache are held in Node.js instance memory, meaning state resets when Cloud Run spins up fresh container instances.",
+      "The 'delete-all' feature executes within a single Firestore batch per collection, subject to Firestore's 500-write batch ceiling; export is currently unpaginated.",
+      "XML delimiter encapsulation is best-effort against prompt injection because user text angle brackets are not escaped before string interpolation.",
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "REST Endpoints",
+          value: "9",
+          scope: "Backend Express Router",
+          notes: "All 9 require verified Bearer ID token",
+        },
+        {
+          parameter: "Recent Entries Context",
+          value: "3 entries",
+          scope: "Prompt Construction",
+          notes: "Each entry snippet is capped at 200 characters",
+        },
+        {
+          parameter: "Memory Candidate Pool",
+          value: "Up to 30 memories",
+          scope: "In-memory Ranking",
+          notes: "Each candidate snippet is capped at 350 characters",
+        },
+        {
+          parameter: "Journal Entry Max Length",
+          value: "4,000 characters",
+          scope: "Input Validation Middleware",
+          notes: "Excess length rejected with 400 Bad Request",
+        },
+        {
+          parameter: "Question Max Length",
+          value: "500 characters",
+          scope: "Ask My Journal Endpoint",
+          notes: "Enforces concise retrieval queries",
+        },
+        {
+          parameter: "Rate Limit Capacity",
+          value: "10 tokens",
+          scope: "Per-User Token Bucket",
+          notes: "Burst capacity; refills 1 token every 6 seconds",
+        },
+        {
+          parameter: "Secret Cache TTL",
+          value: "3,600 seconds (1 hr)",
+          scope: "Secret Manager Client",
+          notes: "Held in Node.js process heap memory",
+        },
+        {
+          parameter: "Entry Query Page Cap",
+          value: "50 entries",
+          scope: "Firestore GET /entries",
+          notes: "Default fetch limit per request",
+        },
+      ],
+      models: [
+        {
+          primary: "gemini-3.6-flash",
+          fallback: "gemini-3.5-flash-lite",
+          role: "Reflective dialogue formulation and memory synthesis",
+        },
+      ],
+      iamRoles: [
+        {
+          role: "roles/secretmanager.secretAccessor",
+          purpose: "Scoped strictly to read the Gemini API secret payload",
+        },
+        {
+          role: "roles/datastore.user",
+          purpose: "Provides read/write access to Cloud Firestore documents",
+        },
+        {
+          role: "roles/firebaseauth.admin",
+          purpose: "Allows backend verification of Firebase ID tokens and revocation state",
+        },
+      ],
+      endpointsSummary:
+        "9 endpoints covering Auth state, Journal Entries (CRUD), Memories (query, update, clear), and AI Conversation / Querying.",
+      sourceReferences: [
+        {
+          label: "Repository Root",
+          url: "https://github.com/OjasPal/Personal-Gemini-Journal",
+        },
+        {
+          label: "backend/server.js",
+          url: "https://github.com/OjasPal/Personal-Gemini-Journal/blob/master/backend/server.js",
+        },
+      ],
+    },
+  },
+
+  "medical-rag-chatbot": {
+    slug: "medical-rag-chatbot",
+    index: "02",
+    title: "Medical RAG Chatbot",
+    period: "September 2026",
+    domainTag: "Retrieval-Augmented Generation & Healthcare NLP",
+    tagline:
+      "A medical Q&A assistant that retrieves relevant passages from an indexed medical reference before answering.",
+    plainDescription:
+      "Enter health queries to search an indexed medical reference and retrieve the most relevant passages. A hosted language model formulates replies conditioned strictly on the retrieved context, politely declining off-topic questions.",
+    problemStatement:
+      "Large language models queried directly on clinical and medical topics frequently hallucinate without pointing to authoritative sources. Retrieval-Augmented Generation (RAG) grounds model outputs by supplying relevant reference passages at inference time without requiring expensive model retraining.",
+    headlineMetrics: [
+      {
+        label: "Indexed Chunks",
+        value: "5,860",
+        context:
+          "Chunks embedded (500 chars, 20 overlap) and indexed into Pinecone vector storage",
+      },
+      {
+        label: "Retrieval Depth",
+        value: "Top-2 Chunks",
+        context:
+          "Retrieved via 384-dimension vector embeddings per user query",
+      },
+      {
+        label: "Server Boot & Cold Start",
+        value: "~30s Cold Start",
+        context:
+          "Reduced from ~1 min using Cloud Run CPU boost; sub-second Gunicorn bind via lazy initialization",
+      },
+    ],
+    links: {
+      live: "https://medical-chatbot-1032077414344.asia-south2.run.app",
+      code: "https://github.com/OjasPal/Medical-RAG-Chatbot",
+      video: null,
+    },
+    image: "/projects/medical-rag-chatbot.webp",
+    whatIDid: {
+      wordingNote:
+        "Wrote applies directly to the indexing pipeline script and Flask endpoints. Architecture design, component integration, and cloud debugging reflect full implementation ownership.",
+      items: [
+        "Wrote the indexing pipeline script (store_index.py), core Flask routing, dependency requirements, and container environment configuration.",
+        "Designed and reviewed the LangChain retrieval chain (app.py), the Pinecone and HuggingFace embedding helper integration (src/helper.py), the system prompt template (src/prompt.py), and the containerized Dockerfile.",
+        "Integrated and tested the interactive browser chat interface (templates/chat.html) and client-side marked.js markdown rendering.",
+        "Deployed the application container to Google Cloud Run and resolved production container cold-start and health-check timeout bottlenecks.",
+      ],
+    },
+    architecture: {
+      summary:
+        "Composed of two discrete phases: an offline indexing pipeline that pre-computes dense vector embeddings from reference documents into Pinecone, and a live web service that executes question embedding, top-k vector retrieval, and augmented prompt generation.",
+      trustBoundaryDescription:
+        "The web service isolates source documents by embedding them ahead of time into a serverless vector store; incoming queries pass through prompt constraints before reaching the hosted Groq LLM.",
+      nodes: [
+        {
+          id: "source-doc",
+          label: "Source Reference PDF",
+          lane: "Offline Indexing Path",
+          responsibility:
+            "Supplies authoritative medical reference text for chunking and embedding.",
+          technologies: ["PyPDFLoader", "RecursiveCharacterTextSplitter"],
+          inputs: ["Local document PDF (git-ignored)"],
+          outputs: ["5,860 text chunks (500 chars, 20 char overlap)"],
+          details:
+            "Kept in a git-ignored data/ directory to prevent redistribution of copyrighted reference material.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/store_index.py",
+        },
+        {
+          id: "embed-pipeline",
+          label: "Embedding Pipeline",
+          lane: "Offline Indexing Path",
+          responsibility:
+            "Transforms extracted text chunks into dense 384-dimensional vector representations.",
+          technologies: ["HuggingFace", "BAAI/bge-small-en-v1.5", "PyTorch (CPU)"],
+          inputs: ["Text chunks"],
+          outputs: ["384-dimensional dense vectors"],
+          details:
+            "Uses a compact open embedding model capable of running efficiently on CPU architecture.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/store_index.py",
+        },
+        {
+          id: "vector-store",
+          label: "Pinecone Vector Index",
+          lane: "Offline Indexing Path",
+          responsibility:
+            "Provides hosted persistent vector storage and cosine similarity lookups.",
+          technologies: ["Pinecone Serverless", "Cosine Similarity", "AWS us-east-1"],
+          inputs: ["Embedded chunk vectors + text payloads"],
+          outputs: ["Top-2 nearest matching chunk texts"],
+          details:
+            "Stores vector embeddings and raw chunk text. Does not store source page numbers or metadata tags.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/src/helper.py",
+        },
+        {
+          id: "web-client",
+          label: "Web Chat UI",
+          lane: "Live Question Path",
+          responsibility:
+            "Accepts user medical inquiries and renders formatted Markdown responses in real time.",
+          technologies: ["HTML5", "CSS", "JavaScript", "marked.js"],
+          inputs: ["User medical query text"],
+          outputs: ["POST /get payload"],
+          details:
+            "Browser interface communicating asynchronously with the Flask endpoint and converting Markdown into semantic HTML.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/templates/chat.html",
+        },
+        {
+          id: "flask-server",
+          label: "Flask & Gunicorn Server",
+          lane: "Live Question Path",
+          responsibility:
+            "Manages HTTP routing, executes lazy initialization of model connections, and orchestrates LangChain retrieval.",
+          technologies: ["Python 3.10", "Flask", "Gunicorn (1 worker, 8 threads)", "Cloud Run"],
+          inputs: ["Incoming question text"],
+          outputs: ["Synthesized answer text"],
+          details:
+            "Lazy loading of embeddings inside route handlers enables Gunicorn to bind port 8080 in ~0.05 seconds, preventing Cloud Run startup timeout.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/app.py",
+          isTrustBoundaryGate: true,
+        },
+        {
+          id: "groq-llm",
+          label: "Hosted LLM Inference",
+          lane: "Live Question Path",
+          responsibility:
+            "Synthesizes grounded clinical responses based on retrieved context and conversation history.",
+          technologies: ["Groq API", "openai/gpt-oss-20b", "Temperature 0.5", "LangChain"],
+          inputs: ["System prompt with top-2 passages + query"],
+          outputs: ["Grounded natural language answer"],
+          details:
+            "System prompt instructs the model to utilize retrieved context and decline non-medical questions.",
+          sourceLink:
+            "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/src/prompt.py",
+        },
+      ],
+      edges: [
+        { from: "source-doc", to: "embed-pipeline", label: "500-char chunks" },
+        { from: "embed-pipeline", to: "vector-store", label: "384-dim vectors" },
+        { from: "web-client", to: "flask-server", label: "POST /get" },
+        { from: "flask-server", to: "vector-store", label: "Query embedding lookup" },
+        { from: "vector-store", to: "flask-server", label: "Top-2 passages" },
+        { from: "flask-server", to: "groq-llm", label: "Augmented prompt" },
+        { from: "groq-llm", to: "web-client", label: "Grounded answer" },
+      ],
+    },
+    decisions: [
+      {
+        context: "Knowledge Grounding Strategy",
+        choice: "Retrieval-Augmented Generation (RAG) over model fine-tuning",
+        alternatives: ["Full model fine-tuning or LoRA adaptation"],
+        rationale:
+          "Fine-tuning adjusts tone and style rather than ensuring factual recall. RAG allows knowledge base updates simply by re-indexing reference passages without GPU retraining costs.",
+        tradeOff:
+          "Inference requires multi-step orchestration (embedding + vector search + LLM generation).",
+      },
+      {
+        context: "Server Initialization & Cloud Run Health Checks",
+        choice: "Lazy instantiation of embedding model and Pinecone client inside route handler",
+        alternatives: ["Global initialization at application module import time"],
+        rationale:
+          "Loading the heavy Hugging Face embedding model at startup delayed Gunicorn from binding port 8080 before Cloud Run container health checks timed out, producing 503 deployment errors.",
+        tradeOff:
+          "The very first user query absorbs the model instantiation delay rather than taking the hit at boot.",
+      },
+      {
+        context: "Inference & Vector Hosting",
+        choice: "Hosted Groq API and Pinecone Serverless",
+        alternatives: ["Self-hosted Ollama and local FAISS/Chroma within container"],
+        rationale:
+          "Running an LLM and vector database inside Cloud Run would require expensive GPU compute and exceed container memory constraints. Hosted APIs keep the container lightweight.",
+        tradeOff:
+          "Introduces external network dependencies and latency across services.",
+      },
+      {
+        context: "Intellectual Property & Repository Safety",
+        choice: "Strictly git-ignoring the data/ directory containing source document PDF",
+        alternatives: ["Checking source PDF into repository"],
+        rationale:
+          "Prevents redistributing copyrighted reference encyclopedia material in a public source repository.",
+        tradeOff:
+          "Requires running indexing locally with the source file before deployment.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue: "Cloud Run 503 Deployment & Health Check Failures",
+        rootCause:
+          "Importing and loading the HuggingFace transformer model during top-level module evaluation blocked Gunicorn from binding port 8080 within the platform health-check window.",
+        resolution:
+          "Deferred model loading inside get_rag_chain() so Gunicorn binds port 8080 in ~0.05 seconds, allowing container checks to pass immediately.",
+      },
+      {
+        issue: "Extended Scaled-to-Zero Container Cold Starts (~1 minute)",
+        rootCause:
+          "A zero-instance Cloud Run container had to spin up the container environment and compute model layers on initial request with standard CPU throttling.",
+        resolution:
+          "Enabled Cloud Run CPU boost (--cpu-boost), cutting container start time to approximately 30 seconds.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "Configuration credentials are abstracted to environment variables, copyrighted assets remain excluded from source control, and system prompt boundaries guide domain relevance.",
+      rules: [
+        "API credential isolation: Groq and Pinecone API keys are consumed strictly via environment variables, with .env files excluded via .gitignore.",
+        "Prompt-level domain boundary: The system prompt explicitly instructs the language model to answer medical questions using retrieved passages and decline non-medical questions (finance, coding, trivia).",
+        "Asset compliance: The reference PDF is git-ignored and never committed to version control.",
+      ],
+    },
+    limitations: [
+      "All visitors share a single in-memory conversation session (default_user_session in app.py); clearing history or submitting questions influences sequential context across users.",
+      "Answers are only partly grounded: the prompt allows general medical knowledge when passages are sparse, and passages lack page-number metadata for source citations.",
+      "No clinical disclaimer is present in the UI or prompt to clarify that responses do not constitute professional medical advice.",
+      "Upstream error handling is thin: Pinecone or Groq failures bubble raw exception strings with 500 status codes without retry fallbacks.",
+      "The public /get endpoint has no user authentication or token-bucket rate limiting.",
+      "Cross-region network latency exists between the Pinecone index (AWS us-east-1) and the Cloud Run container (GCP asia-south2).",
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "Indexed Chunks",
+          value: "5,860 chunks",
+          scope: "store_index.py",
+          notes: "Derived from reference text splitting",
+        },
+        {
+          parameter: "Chunk Size",
+          value: "500 characters",
+          scope: "Text Splitting",
+          notes: "20 characters overlap between consecutive chunks",
+        },
+        {
+          parameter: "Embedding Dimensions",
+          value: "384 dimensions",
+          scope: "BAAI/bge-small-en-v1.5",
+          notes: "Dense floating-point vector representations",
+        },
+        {
+          parameter: "Retrieval Depth",
+          value: "Top-2 chunks",
+          scope: "Pinecone Query",
+          notes: "Fetched via cosine similarity",
+        },
+        {
+          parameter: "Gunicorn Worker Config",
+          value: "1 worker, 8 threads",
+          scope: "Dockerfile ENTRYPOINT",
+          notes: "Timeout disabled to accommodate long generations",
+        },
+        {
+          parameter: "Cloud Run Allocation",
+          value: "2 GiB RAM, 2 vCPUs",
+          scope: "Cloud Run Runtime",
+          notes: "Min instances 0, CPU boost active",
+        },
+      ],
+      models: [
+        {
+          primary: "openai/gpt-oss-20b (via Groq API)",
+          role: "Augmented dialogue generation with temperature 0.5",
+        },
+        {
+          primary: "BAAI/bge-small-en-v1.5 (via HuggingFace)",
+          role: "Dense text chunk and query vector embedding (384 dimensions)",
+        },
+      ],
+      sourceReferences: [
+        {
+          label: "Repository Root",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot",
+        },
+        {
+          label: "app.py",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/app.py",
+        },
+        {
+          label: "src/helper.py",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/src/helper.py",
+        },
+        {
+          label: "src/prompt.py",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/src/prompt.py",
+        },
+        {
+          label: "store_index.py",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/store_index.py",
+        },
+        {
+          label: "templates/chat.html",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/templates/chat.html",
+        },
+        {
+          label: "Dockerfile",
+          url: "https://github.com/OjasPal/Medical-RAG-Chatbot/blob/main/Dockerfile",
+        },
+      ],
+    },
+  },
+
+  "ml-dl-portfolio": {
+    slug: "ml-dl-portfolio",
+    index: "03",
+    title: "ML & DL Project Portfolio",
+    period: "October 2026",
+    domainTag: "Applied Machine Learning & Deep Learning",
+    tagline:
+      "Eleven machine learning and deep learning interactive demos unified in one multi-page Streamlit application.",
+    plainDescription:
+      "A model observatory uniting eleven predictive machine learning and deep learning applications across computer vision, natural language processing, tabular regression, and recommendation systems. Models are pre-trained and serialized, responding on request without retraining on page load.",
+    problemStatement:
+      "Jupyter notebooks are ideal for research and model training but difficult for non-technical stakeholders to inspect and test. This project consolidated eleven distinct machine learning workflows into a unified, interactive web application.",
+    headlineMetrics: [
+      {
+        label: "Unified Models",
+        value: "11 Demos",
+        context:
+          "Covering computer vision, NLP, recommendation systems, and clinical ML",
+      },
+      {
+        label: "Classifier Accuracy",
+        value: "93.6%",
+        context:
+          "Validation accuracy on the 46-breed pet classifier (fine-tuned EfficientNet-B0)",
+      },
+      {
+        label: "Inference Latency",
+        value: "< 100 ms",
+        context:
+          "Measured by author on Streamlit Cloud CPU (25 to 30 ms on Pet Breed and Face Detection)",
+      },
+    ],
+    links: {
+      live: "https://ojaspal-ml-dl-portfolio.streamlit.app",
+      code: "https://github.com/OjasPal/ML-DL-Portfolio",
+      video: null,
+    },
+    image: "/projects/ml-dl-portfolio.webp",
+    whatIDid: {
+      wordingNote:
+        "Wrote and trained apply directly to the specified original model notebooks; designed, integrated, and deployed apply to the Streamlit web application architecture.",
+      items: [
+        "Wrote and trained the original experimental notebooks for the Movie Recommendation System, Housing Price Prediction, Spotify Song Recommendation System, Keras Handwritten Digit Recognizer, and Email Spam Detector.",
+        "Designed the modular multi-page Streamlit application architecture, implementing cached resource loaders and interactive forms.",
+        "Resolved deployment dependency and memory compatibility issues to launch and maintain the application on Streamlit Community Cloud.",
+      ],
+    },
+    architecture: {
+      summary:
+        "An observatory architecture where a single Streamlit process routes to eleven independent model pages. Pre-trained model weights are serialized offline (joblib, .pth, .keras, OpenCV XML) and cached in container memory via st.cache_resource.",
+      nodes: [
+        {
+          id: "notebooks",
+          label: "Offline Training & Serialization",
+          lane: "Model Training & Serialization",
+          responsibility:
+            "Trains algorithms across tabular, text, image, and matrix data, serializing final weights to disk.",
+          technologies: ["scikit-learn", "CatBoost", "PyTorch", "TensorFlow / Keras", "OpenCV"],
+          inputs: ["Domain datasets (TMDB, Spotify, Oxford Pet, Stanford Dogs, MNIST, etc.)"],
+          outputs: ["Serialized model artifacts (.joblib, .pth, .keras, XML)"],
+          details:
+            "Models are pre-trained offline so the web application never incurs retraining latency at runtime.",
+          sourceLink:
+            "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/README.md",
+        },
+        {
+          id: "streamlit-router",
+          label: "Streamlit App Runtime",
+          lane: "Streamlit App Runtime",
+          responsibility:
+            "Renders navigation, manages cached model loading, and standardizes user inputs.",
+          technologies: ["Python 3.12", "Streamlit", "st.cache_resource", "pandas"],
+          inputs: ["User input parameters, file uploads, canvas strokes"],
+          outputs: ["Preprocessed feature tensors"],
+          details:
+            "Home.py manages the overarching portal while individual pages/ handle specific feature transformations.",
+          sourceLink:
+            "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/Home.py",
+        },
+        {
+          id: "inference-engine",
+          label: "Real-Time Inference",
+          lane: "Model Inference",
+          responsibility:
+            "Executes forward prediction passes, times execution with time.perf_counter, and renders Plotly visualizations.",
+          technologies: ["EfficientNet-B0", "ResNet-10 SSD", "Plotly", "Cosine Similarity"],
+          inputs: ["Transformed input vectors"],
+          outputs: ["Prediction classes, similarity scores, bounding boxes"],
+          details:
+            "Executes within Streamlit Community Cloud CPU limits; Spotify similarity is computed per query to bypass memory bounds.",
+          sourceLink:
+            "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/pages/09_Pet_Breed_Classifier.py",
+        },
+      ],
+      edges: [
+        { from: "notebooks", to: "streamlit-router", label: "Cached model weights" },
+        { from: "streamlit-router", to: "inference-engine", label: "Preprocessed input" },
+        { from: "inference-engine", to: "streamlit-router", label: "Predictions & charts" },
+      ],
+    },
+    decisions: [
+      {
+        context: "Application Delivery Framework",
+        choice: "Single multi-page Streamlit application",
+        alternatives: ["Eleven separate web applications", "Custom React + FastAPI stack"],
+        rationale:
+          "Consolidating eleven models into a single Streamlit framework vastly reduced deployment maintenance and provided a unified interface for visitors to test each project.",
+        tradeOff:
+          "All eleven models share one global Python runtime and container process memory.",
+      },
+      {
+        context: "Memory Optimization for Recommendation Engine",
+        choice: "On-demand per-query cosine similarity calculation",
+        alternatives: ["Precomputing and loading full 32,833-song similarity matrix"],
+        rationale:
+          "The full precomputed similarity matrix required approximately 8 GB of storage, exceeding Streamlit Community Cloud's 2.7 GB RAM boundary. Computing similarity for the selected track on demand fits memory limits cleanly.",
+        tradeOff:
+          "Requires a brief calculation per recommendation request rather than instant index lookups.",
+      },
+      {
+        context: "Model Lifecycle Management",
+        choice: "Serialized weights loaded via @st.cache_resource",
+        alternatives: ["Retraining or fitting models on script execution"],
+        rationale:
+          "Streamlit reruns entire scripts on user interaction. Caching model objects ensures predictions execute instantly without re-reading disks or refitting estimators.",
+        tradeOff:
+          "Initial page load incurs model deserialization time.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue: "Spotify Recommendation Discrepancy on Cloud",
+        rootCause:
+          "The deployed feature builder omitted certain categorical features present in the original experimental notebook, triggering an unlogged fallback path.",
+        resolution:
+          "Rebuilt the cloud feature pipeline to mirror the notebook specification (5 encoded and 9 standardized feature columns).",
+      },
+      {
+        issue: "Deployment Failures on Streamlit Cloud",
+        rootCause:
+          "Default runtime Python version was incompatible with pinned TensorFlow releases, and OpenCV required missing Linux system graphic dependencies.",
+        resolution:
+          "Standardized environment configuration on Python 3.12 and switched to headless OpenCV (opencv-python-headless).",
+      },
+      {
+        issue: "File Path Resolution Errors",
+        rootCause:
+          "Local folder names and asset paths conflicted with cloud Linux case-sensitive directory structures.",
+        resolution:
+          "Standardized page directory naming into slugified conventions and added path fallback helpers.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "Model loading routines are wrapped in defensive try-except blocks, inference latency is metered in real time, and dependencies are pinned.",
+      rules: [
+        "Defensive model initialization: Deserialization routines catch and report corrupted model files gracefully.",
+        "Runtime telemetry: Interactive computer vision pages record inference duration with time.perf_counter.",
+        "Pinned core dependencies: PyTorch, TensorFlow, scikit-learn, CatBoost, Keras, Streamlit, and OpenCV are explicitly pinned.",
+      ],
+    },
+    limitations: [
+      "Models represent exploratory academic prototypes without continuous production retraining or ground-truth drift monitoring.",
+      "In the Spotify recommender, label-encoded categorical values are combined without normalization alongside standardized audio features, meaning category codes can disproportionately weight recommendations.",
+      "TensorFlow and PyTorch co-exist inside a single container process, which has not undergone concurrent load testing.",
+      "Automated unit and integration test suites are absent.",
+    ],
+    subProjects: [
+      {
+        index: "01",
+        title: "Movie Recommendation System",
+        domain: "Recommendation",
+        approach: "TF-IDF vectors with cosine similarity over 50K TMDB movie titles",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Movie_Recommendation_System",
+      },
+      {
+        index: "02",
+        title: "Housing Price Prediction",
+        domain: "Regression",
+        approach: "Linear Regression on standardized features and encoded Delhi localities",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Housing_Price_Prediction",
+      },
+      {
+        index: "03",
+        title: "Spotify Song Recommendation System",
+        domain: "Recommendation",
+        approach: "Cosine similarity over encoded playlist metadata and standardized audio features",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Spotify_Song_Recommendation_System",
+      },
+      {
+        index: "04",
+        title: "Email Spam Detector",
+        domain: "Natural Language Processing",
+        approach: "NLTK stemming, TF-IDF vectorization, and Logistic Regression",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Email_Spam_Detector",
+      },
+      {
+        index: "05",
+        title: "Customer Churn Prediction",
+        domain: "Classification",
+        approach: "Logistic Regression on 19 customer account and demographic features",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Customer_Churn_Prediction",
+      },
+      {
+        index: "06",
+        title: "Cardiovascular Disease Prediction",
+        domain: "Healthcare ML",
+        approach: "Support Vector Classifier on 11 biometric and lifestyle features (70K records)",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Cardiovascular_Disease_Prediction",
+      },
+      {
+        index: "07",
+        title: "Heart Disease Prediction",
+        domain: "Healthcare ML",
+        approach: "Logistic Regression on 13 clinical biomarkers",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Heart_Disease_Prediction",
+      },
+      {
+        index: "08",
+        title: "Software Salary Prediction",
+        domain: "Regression",
+        approach: "CatBoost on a log-scale target with engineered role and location features",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Salary_Prediction",
+      },
+      {
+        index: "09",
+        title: "Pet Breed Classifier",
+        domain: "Computer Vision",
+        approach: "EfficientNet-B0 fine-tuned in two stages across 46 cat and dog breeds",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Pet_Breed_Classifier",
+      },
+      {
+        index: "10",
+        title: "Face Detection",
+        domain: "Computer Vision",
+        approach: "Pre-trained OpenCV DNN (ResNet-10 SSD) with adjustable confidence threshold",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Face_Detection",
+      },
+      {
+        index: "11",
+        title: "Handwritten Digit Recognizer",
+        domain: "Deep Learning",
+        approach: "Keras neural network on MNIST with an interactive drawing canvas",
+        liveUrl: "https://ojaspal-ml-dl-portfolio.streamlit.app/Handwritten_Digit_Recognizer",
+      },
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "Included Demos",
+          value: "11 Projects",
+          scope: "Application Catalog",
+          notes: "8 Machine Learning, 3 Deep Learning",
+        },
+        {
+          parameter: "Pet Breed Accuracy",
+          value: "93.6% validation",
+          scope: "Fine-tuned EfficientNet-B0",
+          notes: "46 breeds (12 cat, 34 dog)",
+        },
+        {
+          parameter: "Measured Inference",
+          value: "25 to 30 ms",
+          scope: "CPU Streamlit Cloud",
+          notes: "Measured on Pet Breed and Face Detection",
+        },
+        {
+          parameter: "Spotify Songs Evaluated",
+          value: "32,833 tracks",
+          scope: "Cosine Similarity",
+          notes: "Computed on-demand per request",
+        },
+        {
+          parameter: "Cloud RAM Limit",
+          value: "2.7 GB boundary",
+          scope: "Streamlit Cloud Hosting",
+          notes: "Enforced avoidance of precomputed matrix",
+        },
+      ],
+      sourceReferences: [
+        {
+          label: "Repository Root",
+          url: "https://github.com/OjasPal/ML-DL-Portfolio",
+        },
+        {
+          label: "Home.py",
+          url: "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/Home.py",
+        },
+        {
+          label: "pages/09_Pet_Breed_Classifier.py",
+          url: "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/pages/09_Pet_Breed_Classifier.py",
+        },
+        {
+          label: "pages/10_Face_Detection.py",
+          url: "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/pages/10_Face_Detection.py",
+        },
+        {
+          label: "README.md",
+          url: "https://github.com/OjasPal/ML-DL-Portfolio/blob/main/README.md",
+        },
+      ],
+    },
+  },
+
+  "evalai": {
+    slug: "evalai",
+    index: "04",
+    title: "EvalAI",
+    period: "August 2026",
+    domainTag: "AI Alignment & Reward Modeling",
+    tagline:
+      "Predicts which of two AI answers a human evaluator would prefer, with feedback collection and bias checks.",
+    plainDescription:
+      "Given a user prompt, the system queries two local language models (Llama 3.2 and Qwen 2.5 3B) via Ollama. A fine-tuned RoBERTa reward model scores both completions to predict human preference. Evaluators can submit feedback (A, B, or Tie) and rate responses across multiple quality dimensions.",
+    problemStatement:
+      "Evaluating language model output quality typically requires expensive human labeling or costly calls to proprietary frontier models. A lightweight, locally executable reward model can predict preference cheaply and reproducibly while exposing evaluation benchmarks for position and verbosity bias.",
+    eventContext:
+      "Built for the Smart India Hackathon 2026 (Problem Statement: Human Preference Prediction Model for LLM Responses), Team Nova.",
+    collaborator: {
+      name: "Prem Chand Durgapal",
+      linkedinUrl: "https://linkedin.com/in/prem-chand-durgapal/",
+      roleNote:
+        "Project co-developed with Prem Chand Durgapal (Team Nova). Built and validated as a local evaluation laboratory.",
+    },
+    headlineMetrics: [
+      {
+        label: "Test Accuracy",
+        value: "64.22%",
+        context:
+          "On held-out test split (~4,000 pairs, binary A/B task where 50% is chance)",
+      },
+      {
+        label: "Architecture",
+        value: "roberta-base",
+        context:
+          "Fine-tuned with pairwise ranking loss; best checkpoint selected on validation",
+      },
+      {
+        label: "Evaluation Speedup",
+        value: "3m 32s GPU",
+        context:
+          "Vs. ~27 min on CPU using Conda environment with CUDA PyTorch",
+      },
+    ],
+    links: {
+      live: null,
+      code: "https://github.com/OjasPal/EvalAI",
+      video: "https://youtu.be/BvUrBhxuUrc",
+    },
+    image: "/projects/evalai.webp",
+    whatIDid: {
+      wordingNote:
+        "Work reflects collaborative problem definition, architecture specification, local pipeline implementation, and evaluation testing. Covers the preference-prediction (reward-model) stage, not full RLHF. Runs locally via Ollama with no hosted deployment.",
+      items: [
+        "Defined the problem scope, system requirements, architecture flow, and evaluation methodology.",
+        "Built, debugged, and tested the data preprocessing, inference serving, and evaluation benchmarks locally in collaboration with Prem Chand Durgapal.",
+        "Configured dual-model generation orchestration using local Ollama instances (Llama 3.2 and Qwen 2.5 3B) connected to a FastAPI backend and Streamlit interface.",
+      ],
+    },
+    architecture: {
+      summary:
+        "An evaluation lab pipeline spanning offline data preparation from the Arena Human Preference 55K dataset, pairwise reward model training, local dual-model inference via Ollama, and feedback collection with bias evaluation.",
+      nodes: [
+        {
+          id: "data-prep",
+          label: "Data Preprocessing",
+          lane: "Data Preparation",
+          responsibility:
+            "Extracts pairwise preferences, balances labels, and produces stratified splits.",
+          technologies: ["Arena Human Preference 55K", "Pandas", "scikit-learn"],
+          inputs: ["Raw pairwise comparison dataset"],
+          outputs: ["Stratified 80/10/10 train, val, test splits (seed 42)"],
+          details:
+            "Filters ties to frame binary classification (A vs B), removes duplicates, and randomly swaps pairs to prevent position bias learning.",
+          sourceLink:
+            "https://github.com/OjasPal/EvalAI/blob/main/preprocess/preprocess.py",
+        },
+        {
+          id: "reward-training",
+          label: "RoBERTa Reward Model",
+          lane: "Offline Model Training",
+          responsibility:
+            "Learns scalar quality scoring using pairwise ranking loss.",
+          technologies: ["PyTorch", "HuggingFace Transformers", "roberta-base", "bf16"],
+          inputs: ["Tokenized preference pairs (max 256 tokens)"],
+          outputs: ["Saved reward model checkpoint (epoch 2)"],
+          details:
+            "Trained for 4 epochs with batch size 16. Training loss continued declining after epoch 2 while validation accuracy peaked at 64.42%, signaling epoch 2 as the optimal checkpoint.",
+          sourceLink:
+            "https://github.com/OjasPal/EvalAI/blob/main/README.md",
+        },
+        {
+          id: "dual-generation",
+          label: "Local Generation (Ollama)",
+          lane: "Serving & Feedback",
+          responsibility:
+            "Generates candidate completions for prompt inputs without external API costs.",
+          technologies: ["Ollama", "Llama 3.2", "Qwen 2.5 3B"],
+          inputs: ["User evaluation prompt"],
+          outputs: ["Response A and Response B texts"],
+          details:
+            "Queries local LLMs with a 120-second timeout, completely independent of cloud inference services.",
+          sourceLink:
+            "https://github.com/OjasPal/EvalAI/blob/main/backend/app/model_utils.py",
+        },
+        {
+          id: "fastapi-service",
+          label: "FastAPI Scoring Engine",
+          lane: "Serving & Feedback",
+          responsibility:
+            "Hosts RoBERTa reward inference, computes pairwise winner, and logs feedback.",
+          technologies: ["FastAPI", "Python", "JSONL Logging"],
+          inputs: ["Candidate completion pair"],
+          outputs: ["Predicted winner (A or B) + relative scores"],
+          details:
+            "Serves 6 API endpoints handling prediction, feedback logging, evaluation, and candidate retraining.",
+          sourceLink:
+            "https://github.com/OjasPal/EvalAI/blob/main/backend/evaluate.py",
+          isTrustBoundaryGate: true,
+        },
+        {
+          id: "feedback-eval",
+          label: "Evaluation & Bias Suite",
+          lane: "Serving & Feedback",
+          responsibility:
+            "Runs test evaluation, collects human ratings, and measures position and verbosity bias.",
+          technologies: ["Streamlit", "Feedback Training", "scikit-learn metrics"],
+          inputs: ["Human ratings across 5 quality dimensions"],
+          outputs: ["Bias audit scores and retrained model candidates"],
+          details:
+            "Retrained candidate models are evaluated against held-out test splits before activation.",
+          sourceLink:
+            "https://github.com/OjasPal/EvalAI/blob/main/src/feedback_training.py",
+        },
+      ],
+      edges: [
+        { from: "data-prep", to: "reward-training", label: "80/10/10 split" },
+        { from: "reward-training", to: "fastapi-service", label: "Model weights" },
+        { from: "dual-generation", to: "fastapi-service", label: "Dual completions" },
+        { from: "fastapi-service", to: "feedback-eval", label: "Scores & predictions" },
+        { from: "feedback-eval", to: "fastapi-service", label: "Retrained candidates" },
+      ],
+    },
+    decisions: [
+      {
+        context: "Preference Scoring Method",
+        choice: "Dedicated fine-tuned RoBERTa reward model",
+        alternatives: ["Prompting an LLM judge (e.g. GPT-4 or Claude as evaluator)"],
+        rationale:
+          "A small specialized reward model provides deterministic scalar scoring, requires fraction of compute, and executes entirely offline without API fees.",
+        tradeOff:
+          "Task is restricted to pairwise ranking and cannot generate open-ended explanatory feedback.",
+      },
+      {
+        context: "Data Preparation & Tie Handling",
+        choice: "Filtering out tie outcomes to create a balanced binary classification task",
+        alternatives: ["Treating ties as a third class", "Marginal ranking loss"],
+        rationale:
+          "Removing ambiguous ties framed the task as a binary preference choice with an exact 50% chance baseline.",
+        tradeOff:
+          "The trained model is forced to choose a winner and cannot explicitly predict equivalence.",
+      },
+      {
+        context: "Position Bias Mitigation",
+        choice: "Randomly swapping response positions (A/B) during preprocessing",
+        alternatives: ["Preserving original dataset ordering"],
+        rationale:
+          "Without positional randomization, transformer models easily latch onto positional order (preferring whichever answer appears first).",
+        tradeOff:
+          "Requires doubled pair verification during preprocessing.",
+      },
+      {
+        context: "Generation Infrastructure",
+        choice: "Local Ollama daemon hosting Llama 3.2 and Qwen 2.5",
+        alternatives: ["Cloud-hosted API endpoints"],
+        rationale:
+          "Allowed the full evaluation lab to run locally on a developer workstation with zero recurring API costs.",
+        tradeOff:
+          "Execution speed is constrained by available workstation hardware.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue: "Excessive Evaluation Runtimes on CPU (~27 minutes)",
+        rootCause:
+          "The baseline workstation environment executed PyTorch without CUDA bindings, forcing all tensor operations through CPU threads.",
+        resolution:
+          "Configured a dedicated Conda environment with CUDA-enabled PyTorch, reducing full test set evaluation to 3 minutes 32 seconds.",
+      },
+      {
+        issue: "Constrained Hackathon Compute and Early Overfitting",
+        rootCause:
+          "Training loss continued to decrease across 4 epochs while validation accuracy peaked at epoch 2 and dropped thereafter.",
+        resolution:
+          "Selected the epoch 2 checkpoint based on validation accuracy (64.42%), securing 64.22% on the held-out test split.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "Engineered as a local research prototype with automated backend unit tests and continuous evaluation gates on retrained weights.",
+      rules: [
+        "Local execution perimeter: All models and generation daemons run locally on localhost with no public attack surface.",
+        "Automated unit testing: Backend includes test suites for API schemas and model utility functions (backend/tests/).",
+        "Evaluation gate: Retrained model weights must pass evaluation benchmarks before activation.",
+      ],
+    },
+    limitations: [
+      "A test accuracy of 64.22% on human preference prediction is modest, reflecting the inherently subjective nature of human judgment.",
+      "Ties were removed during training, so the model cannot predict indifference or equivalent quality.",
+      "Inputs are truncated at 256 tokens, clipping long context windows and detailed responses.",
+      "Engineered strictly as a local evaluation tool; has not been deployed to public cloud infrastructure.",
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "Test Accuracy",
+          value: "64.22%",
+          scope: "Held-out Test Split",
+          notes: "Binary preference prediction (50% is chance)",
+        },
+        {
+          parameter: "Validation Progression",
+          value: "63.99% -> 64.42% (peak)",
+          scope: "Epochs 1 and 2",
+          notes: "Epoch 2 selected before overfitting",
+        },
+        {
+          parameter: "Dataset Split",
+          value: "80 / 10 / 10",
+          scope: "Arena 55K",
+          notes: "Stratified, seed 42",
+        },
+        {
+          parameter: "Max Token Length",
+          value: "256 tokens",
+          scope: "RoBERTa Tokenizer",
+          notes: "Input sequences truncated to 256 tokens",
+        },
+        {
+          parameter: "Evaluation Benchmarks",
+          value: "GPU: 3m 32s | CPU: ~27m",
+          scope: "Full Test Set Evaluation",
+          notes: "Measured on CUDA PyTorch vs CPU fallback",
+        },
+        {
+          parameter: "Local Inference Timeout",
+          value: "120 seconds",
+          scope: "Ollama Daemon",
+          notes: "Prevents hanging queries",
+        },
+      ],
+      models: [
+        {
+          primary: "roberta-base (fine-tuned reward head)",
+          role: "Scalar preference scoring via pairwise loss",
+        },
+        {
+          primary: "Llama 3.2 & Qwen 2.5 3B (via Ollama)",
+          role: "Dual candidate response generation",
+        },
+      ],
+      sourceReferences: [
+        {
+          label: "Repository Root",
+          url: "https://github.com/OjasPal/EvalAI",
+        },
+        {
+          label: "backend/evaluate.py",
+          url: "https://github.com/OjasPal/EvalAI/blob/main/backend/evaluate.py",
+        },
+        {
+          label: "backend/app/model_utils.py",
+          url: "https://github.com/OjasPal/EvalAI/blob/main/backend/app/model_utils.py",
+        },
+        {
+          label: "preprocess/preprocess.py",
+          url: "https://github.com/OjasPal/EvalAI/blob/main/preprocess/preprocess.py",
+        },
+        {
+          label: "src/feedback_training.py",
+          url: "https://github.com/OjasPal/EvalAI/blob/main/src/feedback_training.py",
+        },
+        {
+          label: "README.md",
+          url: "https://github.com/OjasPal/EvalAI/blob/main/README.md",
+        },
+      ],
+    },
+  },
+};
+
+export function getCaseStudy(slug: string): CaseStudy | undefined {
+  return caseStudies[slug];
+}
+
+export function hasCaseStudy(slug: string): boolean {
+  return Boolean(caseStudies[slug]);
+}
+
+export function getAdjacentCaseStudies(currentSlug: string): {
+  prev: CaseStudy | null;
+  next: CaseStudy | null;
+} {
+  const currentIndex = projectOrder.indexOf(currentSlug);
+  if (currentIndex === -1) {
+    return { prev: null, next: null };
+  }
+
+  const prevSlug = currentIndex > 0 ? projectOrder[currentIndex - 1] : null;
+  const nextSlug =
+    currentIndex < projectOrder.length - 1 ? projectOrder[currentIndex + 1] : null;
+
+  return {
+    prev: prevSlug ? caseStudies[prevSlug] || null : null,
+    next: nextSlug ? caseStudies[nextSlug] || null : null,
+  };
+}

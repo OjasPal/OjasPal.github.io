@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Project } from "../../data/projects";
+import { hasCaseStudy } from "../../data/caseStudies";
 import { ProjectLinks } from "./ProjectLinks";
 import { TiltCard } from "../ui/TiltCard";
 import { SpotlightSurface } from "../ui/SpotlightSurface";
@@ -114,44 +115,57 @@ export function ProjectCard({ project, featured = false }: ProjectCardProps) {
             </div>
           )}
 
-          {/* Verified Engineering Bullets Disclosure */}
-          <div className="border-t border-[#1E2430] pt-4">
-            <button
-              type="button"
-              onClick={() => setDetailsOpen(!detailsOpen)}
-              aria-expanded={detailsOpen}
-              aria-controls={disclosureId}
-              className="w-full flex items-center justify-between py-2 text-xs font-mono font-medium text-[#8A90A0] hover:text-[#38BDF8] transition-colors cursor-pointer"
-            >
-              <span>{detailsOpen ? "Hide technical details" : "Show technical details"}</span>
-              <ChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  detailsOpen ? "rotate-180 text-[#38BDF8]" : ""
-                }`}
-              />
-            </button>
+          {/* Technical Details: Dedicated Case Study Link or Inline Dropdown */}
+          {hasCaseStudy(project.slug) ? (
+            <div className="border-t border-[#1E2430] pt-4">
+              <a
+                href={`#/projects/${project.slug}`}
+                aria-label={`View technical case study for ${project.title}`}
+                className="group w-full flex items-center justify-between py-2.5 px-4 rounded-xl border border-[#38BDF8]/40 bg-[#12141C] text-[#F2F4F8] hover:bg-[#38BDF8] hover:text-[#0B0C10] hover:border-[#38BDF8] text-xs font-mono font-semibold transition-all duration-200 cursor-pointer"
+              >
+                <span>View technical details</span>
+                <ArrowRight className="w-4 h-4 text-[#38BDF8] group-hover:text-[#0B0C10] group-hover:translate-x-1 transition-transform duration-200" />
+              </a>
+            </div>
+          ) : (
+            <div className="border-t border-[#1E2430] pt-4">
+              <button
+                type="button"
+                onClick={() => setDetailsOpen(!detailsOpen)}
+                aria-expanded={detailsOpen}
+                aria-controls={disclosureId}
+                className="w-full flex items-center justify-between py-2 text-xs font-mono font-medium text-[#8A90A0] hover:text-[#38BDF8] transition-colors cursor-pointer"
+              >
+                <span>{detailsOpen ? "Hide technical details" : "Show technical details"}</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    detailsOpen ? "rotate-180 text-[#38BDF8]" : ""
+                  }`}
+                />
+              </button>
 
-            <AnimatePresence>
-              {detailsOpen && (
-                <motion.div
-                  id={disclosureId}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <ul className="mt-3 space-y-2.5 text-xs text-[#8A90A0] leading-relaxed list-disc list-inside">
-                    {project.bullets.map((bullet, idx) => (
-                      <li key={idx} className="marker:text-[#38BDF8]">
-                        <span className="text-[#F2F4F8]/90">{bullet}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              <AnimatePresence>
+                {detailsOpen && (
+                  <motion.div
+                    id={disclosureId}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <ul className="mt-3 space-y-2.5 text-xs text-[#8A90A0] leading-relaxed list-disc list-inside">
+                      {project.bullets.map((bullet, idx) => (
+                        <li key={idx} className="marker:text-[#38BDF8]">
+                          <span className="text-[#F2F4F8]/90">{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
 
         {/* Action Button Row */}
