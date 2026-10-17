@@ -4,7 +4,23 @@
 
 Generative AI, RAG and applied machine learning projects, from data preparation to cloud deployment.
 
-[Website](https://ojaspal.github.io) · [LinkedIn](https://www.linkedin.com/in/ojas-pal/) · [Email](mailto:ojaspal.dev@gmail.com)
+<div align="center">
+
+<a href="https://ojaspal.github.io">
+  <img src="https://img.shields.io/badge/✦%20EXPLORE%20MY%20PORTFOLIO-000000?style=for-the-badge&logoColor=white&labelColor=000000" alt="Explore My Portfolio" height="45"/>
+</a>
+
+<br/>
+
+<a href="https://www.linkedin.com/in/ojas-pal/">
+  <img src="https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn"/>
+</a>
+&nbsp;
+<a href="mailto:ojaspal.dev@gmail.com">
+  <img src="https://img.shields.io/badge/Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Email"/>
+</a>
+
+</div>
 
 [![Deploy to GitHub Pages](https://github.com/OjasPal/OjasPal.github.io/actions/workflows/deploy.yml/badge.svg)](https://github.com/OjasPal/OjasPal.github.io/actions/workflows/deploy.yml) ![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
 
