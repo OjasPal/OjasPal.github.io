@@ -54,16 +54,16 @@ export const profile: Profile = {
   },
   proofStats: [
     {
-      value: "93.6%",
-      caption: "validation accuracy telling 46 cat and dog breeds apart (ML-DL Portfolio)",
+      value: "15",
+      caption: "Featured AI, ML & GenAI Projects",
     },
     {
-      value: "9 / 9",
-      caption: "API endpoints locked behind verified login (Personal Gemini Journal)",
+      value: "4",
+      caption: "Live Deployed Apps",
     },
     {
-      value: "3",
-      caption: "deployed apps you can open and try right now",
+      value: "GCP",
+      caption: "Building And Deploying GenAI Applications",
     },
   ],
 };
