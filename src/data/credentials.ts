@@ -42,7 +42,7 @@ export const timeline: TimelineItem[] = [
     type: "experience",
     title: "AI/ML Coordinator",
     organization: "GDG on Campus USAR",
-    period: "2026",
+    period: "Oct 2026",
     status: "Current",
   },
 ];

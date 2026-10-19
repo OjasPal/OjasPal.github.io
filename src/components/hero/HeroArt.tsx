@@ -104,16 +104,6 @@ export function HeroArt() {
         )}
       </motion.div>
 
-      {/* Decorative Cyan HUD Orbit Elements */}
-      <div
-        aria-hidden="true"
-        className="hidden sm:block absolute inset-2 rounded-full border border-[#1E2430]/60 pointer-events-none"
-      />
-      <div
-        aria-hidden="true"
-        className="hidden sm:block absolute inset-12 rounded-full border border-[#38BDF8]/10 pointer-events-none border-dashed"
-      />
-
       {/* 6 CSS Particles (hidden on mobile and under reduced motion) */}
       {!prefersReducedMotion && (
         <div aria-hidden="true" className="hidden md:block pointer-events-none absolute inset-0">
