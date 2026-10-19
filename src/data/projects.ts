@@ -130,4 +130,37 @@ export const projects: Project[] = [
       video: "https://youtu.be/BvUrBhxuUrc",
     },
   },
+  {
+    slug: "hirely",
+    index: "05",
+    title: "Hirely",
+    period: "October 2026",
+    tagline:
+      "An AI career copilot that discovers opportunities, scores your fit and tracks applications in one workspace.",
+    highlight: "5-factor match scoring, with reasons for every match",
+    stack: [
+      "React",
+      "TypeScript",
+      "Vite",
+      "FastAPI",
+      "Gemini API",
+      "TinyFish",
+      "Firebase Auth",
+      "SQLite",
+      "Google Cloud Run",
+    ],
+    bullets: [
+      "Led product direction and integrations for a job-search workspace covering profile onboarding, opportunity discovery, an application pipeline (Matched, Applied, In Review, Offers) and a career assistant.",
+      "Ranks opportunities with a transparent weighted score (skills 45%, target role 25%, experience 15%, location 10%, interests 5%) and returns the reasons behind each match.",
+      "Deployed as two Cloud Run services in asia-south2, built from source with Buildpacks, with backend secrets injected from Secret Manager.",
+    ],
+    note: "Built by Team Zenophile with Aryan Bhardwaj.",
+    image: "/projects/hirely.webp",
+    links: {
+      live: "https://hirely-871878611397.asia-south2.run.app/",
+      code: "https://github.com/OjasPal/Hirely",
+      video: "https://youtu.be/wb7zaWtM7qE",
+    },
+  },
 ];
+

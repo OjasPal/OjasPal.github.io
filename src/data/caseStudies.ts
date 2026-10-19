@@ -120,6 +120,7 @@ export const projectOrder = [
   "medical-rag-chatbot",
   "ml-dl-portfolio",
   "evalai",
+  "hirely",
 ];
 
 export const caseStudies: Record<string, CaseStudy> = {
@@ -1327,6 +1328,416 @@ export const caseStudies: Record<string, CaseStudy> = {
         {
           label: "README.md",
           url: "https://github.com/OjasPal/EvalAI/blob/main/README.md",
+        },
+      ],
+    },
+  },
+  hirely: {
+    slug: "hirely",
+    index: "05",
+    title: "Hirely",
+    period: "October 2026",
+    domainTag: "AI Product & Full-Stack Cloud",
+    tagline:
+      "An AI career copilot that discovers opportunities, scores your fit and tracks applications in one workspace.",
+    plainDescription:
+      "Set up a profile, discover job and career opportunities, see how well each one fits you and why, move applications through a pipeline, and ask a career assistant for guidance. Discovery uses TinyFish, guidance uses Gemini, and sign-in uses Firebase Authentication.",
+    problemStatement:
+      "Job searching is spread across many sites. Judging relevance takes time, applications are easy to lose track of, and repetitive tasks interrupt the process. Hirely brings discovery, fit assessment, tracking and guidance into one workspace.",
+    headlineMetrics: [
+      {
+        label: "Match factors",
+        value: "5",
+        context:
+          "Weighted rule-based score: skills 45%, target role 25%, experience 15%, location 10%, interests 5%, with the reasons shown for each match",
+      },
+      {
+        label: "TinyFish APIs",
+        value: "3",
+        context:
+          "Search, Fetch and Agent clients in the backend, with curated fallback data",
+      },
+      {
+        label: "Cloud Run services",
+        value: "2",
+        context:
+          "Frontend (hirely) and backend (hirely-backend) in asia-south2, built with Buildpacks",
+      },
+    ],
+    links: {
+      live: "https://hirely-871878611397.asia-south2.run.app/",
+      code: "https://github.com/OjasPal/Hirely",
+      video: "https://youtu.be/wb7zaWtM7qE",
+    },
+    image: "/projects/hirely.webp",
+    collaborator: {
+      name: "Aryan Bhardwaj",
+      linkedinUrl: "https://www.linkedin.com/in/aryan-bhardwaj28/",
+      roleNote: "Co-builder, Team Zenophile",
+    },
+    whatIDid: {
+      wordingNote:
+        "Use led, deployed, integrated and tested. Do not say wrote or built the codebase. The split of code between teammates is not recorded.",
+      items: [
+        "Led product direction and feature decisions, and defined the integration requirements (TinyFish discovery, Gemini guidance, Firebase sign-in).",
+        "Ran the Google Cloud deployment: two Cloud Run services built from source with Buildpacks, backend secrets in Secret Manager, region asia-south2.",
+        "Tested the deployed application and resolved the deployment problems listed below.",
+        "Built with Aryan Bhardwaj as part of Team Zenophile.",
+      ],
+    },
+    architecture: {
+      summary:
+        "A React app signs users in with Firebase and calls a FastAPI backend that ranks opportunities, discovers them through TinyFish and generates career guidance with Gemini. Two Cloud Run services host the app.",
+      nodes: [
+        {
+          id: "browser-app",
+          label: "React App",
+          lane: "Browser",
+          responsibility:
+            "Screens for onboarding, discovery, pipeline board, assistant and settings. An AppContext holds UI state. Profile, saved opportunities, applications and email settings are partly kept in localStorage.",
+          technologies: ["React 19", "TypeScript", "Vite", "React Router"],
+          details:
+            "Manages client-side routing, user onboarding, opportunity filtering, application pipeline board state, and assistant interactions.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/frontend/src/context/AppContext.tsx",
+        },
+        {
+          id: "firebase-auth",
+          label: "Firebase Authentication",
+          lane: "External services",
+          responsibility:
+            "Google and email/password sign-in in the browser; the app obtains an ID token at sign-in.",
+          technologies: ["Firebase Auth", "Google Sign-In"],
+          details:
+            "Handles browser sign-in sessions and acquires user ID tokens for authenticated sessions.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/frontend/src/services/firebase.ts",
+        },
+        {
+          id: "express-server",
+          label: "Express Production Server",
+          lane: "Frontend service",
+          responsibility:
+            'Serves the built app on the Cloud Run service "hirely". The file also contains a parallel set of API routes (search, recommendations, profile, tracker, discover, email, chat) backed by seeded in-memory data. The frontend calls the API base URL set at build time through VITE_API_BASE_URL, and uses the same origin when it is empty.',
+          technologies: ["Express", "Node.js", "tsx"],
+          details:
+            "Hosts frontend static assets and fallback seeded API routes on Cloud Run.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/frontend/server.ts",
+        },
+        {
+          id: "fastapi-api",
+          label: "FastAPI Backend",
+          lane: "Backend service",
+          responsibility:
+            'Cloud Run service "hirely-backend". Seven routers under /api (profile, search, recommendations, summary, tracker, chat, email) plus a /health route, with CORS.',
+          technologies: ["FastAPI", "Python", "Uvicorn", "CORS"],
+          details:
+            "Main application backend coordinating opportunity retrieval, fit scoring, guidance generation, and application tracking.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/main.py",
+          isTrustBoundaryGate: true,
+        },
+        {
+          id: "matching-service",
+          label: "Match Scoring",
+          lane: "Backend service",
+          responsibility:
+            "Weighted rule-based scoring of a profile against an opportunity. Inputs: skills, target roles, experience level, location, interests. Outputs: a score clamped to 15 to 99, score tiers at 85, 70 and 55, matched and missing skills, and plain-language reasons.",
+          technologies: ["Python", "Rule-Based Scoring"],
+          inputs: [
+            "Skills",
+            "Target roles",
+            "Experience level",
+            "Location",
+            "Interests",
+          ],
+          outputs: [
+            "Score (15–99)",
+            "Score tiers (85, 70, 55)",
+            "Matched/missing skills",
+            "Plain-language reasons",
+          ],
+          details:
+            "Evaluates candidate alignment using deterministic weighting: skills 45%, target role 25%, experience 15%, location 10%, interests 5%.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/matching_service.py",
+        },
+        {
+          id: "tinyfish-client",
+          label: "TinyFish Client",
+          lane: "Backend service",
+          responsibility:
+            "Search, Fetch and Agent APIs. HTTP timeouts 15 s, 30 s and 45 s. Falls back to a curated opportunity dataset when TinyFish is not configured or a call fails.",
+          technologies: ["TinyFish API", "HTTP Client", "Curated Fallback"],
+          details:
+            "Discovers and crawls opportunities across the web with configured timeouts and graceful static fallback.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/tinyfish_client.py",
+        },
+        {
+          id: "gemini-service",
+          label: "Hirely Core Assistant",
+          lane: "Backend service",
+          responsibility:
+            "Career chat. Tries gemini-3.8-flash, then gemini-3.5-flash-lite. 25 s HTTP timeout per call, up to 1,000 output tokens, temperature 0.4. Returns a rule-based local reply if Gemini is unavailable.",
+          technologies: ["Gemini API", "gemini-3.8-flash", "gemini-3.5-flash-lite"],
+          details:
+            "Generates contextual career advice, interview tips, and application assistance with automated fallback to secondary model and rule-based local responses.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/gemini_service.py",
+        },
+        {
+          id: "email-service",
+          label: "Email Service",
+          lane: "Backend service",
+          responsibility:
+            "Welcome, opportunity and digest emails over SMTP, with Resend settings present in the configuration.",
+          technologies: ["SMTP", "Resend", "Python"],
+          details:
+            "Dispatches user notifications, onboarding emails, and saved job digests.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/email_service.py",
+        },
+        {
+          id: "sqlite-db",
+          label: "SQLite Database",
+          lane: "Backend service",
+          responsibility:
+            "Async SQLAlchemy over aiosqlite. On Cloud Run it lives in /tmp, so it is ephemeral.",
+          technologies: ["SQLite", "SQLAlchemy", "aiosqlite"],
+          details:
+            "Persists application state, user profiles, and tracked job statuses to /tmp/hirely.db.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/core/database.py",
+        },
+        {
+          id: "secret-manager",
+          label: "Secret Manager",
+          lane: "External services",
+          responsibility:
+            "Backend credentials are stored here and injected as environment variables at runtime.",
+          technologies: ["Google Secret Manager", "Cloud IAM"],
+          details:
+            "Secures API keys and connection secrets away from source control and injects them into Cloud Run containers.",
+        },
+      ],
+      edges: [
+        { from: "browser-app", to: "firebase-auth", label: "sign in" },
+        { from: "browser-app", to: "express-server", label: "loads the app" },
+        {
+          from: "browser-app",
+          to: "fastapi-api",
+          label: "API calls (base URL set at build time)",
+        },
+        {
+          from: "fastapi-api",
+          to: "matching-service",
+          label: "rank opportunities",
+        },
+        {
+          from: "fastapi-api",
+          to: "tinyfish-client",
+          label: "discover and fetch",
+        },
+        { from: "fastapi-api", to: "gemini-service", label: "career chat" },
+        { from: "fastapi-api", to: "email-service", label: "send email" },
+        { from: "fastapi-api", to: "sqlite-db", label: "read and write" },
+        { from: "secret-manager", to: "fastapi-api", label: "runtime secrets" },
+      ],
+    },
+    decisions: [
+      {
+        context: "Application Architecture",
+        choice: "React and TypeScript frontend plus a Python FastAPI backend",
+        alternatives: ["One monolithic application"],
+        rationale: "Separates the interface from the backend logic.",
+        tradeOff:
+          "Two services to build, configure and deploy, and the frontend needs the backend URL at build time.",
+      },
+      {
+        context: "Opportunity Discovery and Guidance Strategy",
+        choice: "TinyFish for web discovery and Gemini for generated guidance",
+        alternatives: ["Relying on a language model alone"],
+        rationale: "Keeps discovery separate from response generation.",
+        tradeOff:
+          "Two external dependencies and API keys. Curated data and rule-based replies stand in when either is unavailable.",
+      },
+      {
+        context: "Data Storage Strategy",
+        choice: "SQLite with SQLAlchemy",
+        alternatives: ["A managed production database"],
+        rationale: "Simpler setup.",
+        tradeOff:
+          "Weaker durability: on Cloud Run the database lives in ephemeral /tmp storage, so data can be lost when an instance is replaced. Moving to a managed database is the planned upgrade.",
+      },
+      {
+        context: "Deployment Packaging",
+        choice:
+          "Two Cloud Run services built from source with Google Cloud Buildpacks",
+        alternatives: ["A Docker-based deployment"],
+        rationale: "No Dockerfile to maintain.",
+        tradeOff:
+          "Start commands must be declared explicitly (a Procfile for the backend, tsx server.ts for the frontend), which is why tsx had to become a runtime dependency.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue: "The Cloud Run frontend build failed",
+        rootCause:
+          "The start script runs tsx, but tsx was listed only as a development dependency and was pruned from the production build.",
+        resolution: "Moved tsx into the runtime dependencies.",
+      },
+      {
+        issue: "The hosted app could not reach the backend or sign users in",
+        rootCause:
+          "Localhost API URLs, and the deployed domain missing from Firebase Authentication's authorized domains.",
+        resolution:
+          "Supplied the deployed backend URL at build time through VITE_API_BASE_URL and authorized the Cloud Run frontend domain in Firebase.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "What is in place today, and how the app behaves when an integration is unavailable.",
+      rules: [
+        "Backend credentials are stored in Google Secret Manager and injected at runtime. Frontend VITE_ values are treated as public and hold no private keys.",
+        "Backend tests: 8 API tests (health, root, profile create and get, resume parsing, search, on-the-fly matching, summaries, tracker flow) plus a separate email test file.",
+        "Graceful degradation: when TinyFish or Gemini is unavailable, the app falls back to curated opportunities and rule-based replies instead of failing.",
+      ],
+    },
+    limitations: [
+      "Sign-in happens in the browser with Firebase. The API does not yet verify the Firebase ID token, so per-user access control is not enforced at the API layer. Server-side token verification is the next step.",
+      "The discovery client calls POST /api/discover, while the FastAPI router exposes search under /api/search. The app falls back to curated data when live discovery is not reachable.",
+      "The chat request is cancelled after 20 s in the browser, while the Gemini client allows 25 s per model attempt. This mismatch is not yet resolved.",
+      "Curated sample opportunities and rule-based replies mean not every result shown is live.",
+      "SQLite in /tmp and browser localStorage are not durable, account-isolated storage.",
+      "The Express server and the FastAPI backend both define API routes, so the API surface is duplicated.",
+      "Match scores come from hand-written weights. They are not learned from data, and their accuracy has not been evaluated.",
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "Gemini primary model",
+          value: "gemini-3.8-flash",
+          scope: "chat",
+          notes: "as configured in source",
+        },
+        {
+          parameter: "Gemini fallback model",
+          value: "gemini-3.5-flash-lite",
+          scope: "chat",
+          notes: "as configured in source",
+        },
+        {
+          parameter: "Gemini HTTP timeout",
+          value: "25 s",
+          scope: "per model attempt",
+          notes: "in the backend",
+        },
+        {
+          parameter: "Gemini output limit and temperature",
+          value: "1,000 tokens, 0.4",
+          scope: "chat",
+          notes: "in the backend",
+        },
+        {
+          parameter: "Chat request timeout",
+          value: "20 s",
+          scope: "browser",
+          notes: "request is aborted",
+        },
+        {
+          parameter: "TinyFish HTTP timeouts",
+          value: "15 s search, 30 s fetch, 45 s agent",
+          scope: "backend",
+          notes: "HTTP fallback path",
+        },
+        {
+          parameter: "Discovery client retries",
+          value: "2 retries (3 attempts), 600 ms x attempt delay",
+          scope: "browser",
+          notes: "then falls back to curated data",
+        },
+        {
+          parameter: "Match weights",
+          value: "45 / 25 / 15 / 10 / 5",
+          scope: "skills / role / experience / location / interests",
+          notes: "score clamped to 15 to 99",
+        },
+        {
+          parameter: "Match tiers",
+          value: "85, 70, 55",
+          scope: "score thresholds",
+          notes: "tier labels not specified",
+        },
+        {
+          parameter: "Deployment",
+          value: "2 Cloud Run services, asia-south2",
+          scope: "hirely and hirely-backend",
+          notes: "Buildpacks, no Dockerfile",
+        },
+      ],
+      models: [
+        {
+          primary: "gemini-3.8-flash",
+          fallback: "gemini-3.5-flash-lite",
+          role: "Hirely Core career assistant",
+        },
+      ],
+      endpointsSummary:
+        "FastAPI mounts seven routers under /api (profile, search, recommendations, summary, tracker, chat, email) plus a /health route.",
+      sourceReferences: [
+        {
+          label: "frontend/src/context/AppContext.tsx",
+          url: "https://github.com/OjasPal/Hirely/blob/main/frontend/src/context/AppContext.tsx",
+        },
+        {
+          label: "frontend/src/services/firebase.ts",
+          url: "https://github.com/OjasPal/Hirely/blob/main/frontend/src/services/firebase.ts",
+        },
+        {
+          label: "frontend/server.ts",
+          url: "https://github.com/OjasPal/Hirely/blob/main/frontend/server.ts",
+        },
+        {
+          label: "backend/app/main.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/main.py",
+        },
+        {
+          label: "backend/app/services/matching_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/matching_service.py",
+        },
+        {
+          label: "backend/app/services/tinyfish_client.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/tinyfish_client.py",
+        },
+        {
+          label: "backend/app/services/gemini_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/gemini_service.py",
+        },
+        {
+          label: "backend/app/services/email_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/email_service.py",
+        },
+        {
+          label: "backend/app/core/database.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/core/database.py",
+        },
+        {
+          label: "backend/tests/test_api.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/tests/test_api.py",
+        },
+        {
+          label: "backend/Procfile",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/Procfile",
+        },
+        {
+          label: "frontend/package.json",
+          url: "https://github.com/OjasPal/Hirely/blob/main/frontend/package.json",
+        },
+        {
+          label: "README.md",
+          url: "https://github.com/OjasPal/Hirely/blob/main/README.md",
         },
       ],
     },

@@ -27,6 +27,11 @@ export function CaseStudyView({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [appendixOpen, setAppendixOpen] = useState(false);
   const [activeTocId, setActiveTocId] = useState<string>("overview");
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [caseStudy.slug]);
 
   const tableOfContents = [
     { id: "overview", label: "Overview" },
@@ -235,13 +240,34 @@ export function CaseStudyView({
 
               {/* Cover Image Frame (16:10 format matching all projects) */}
               <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden bg-[#0B0C10] border border-[#1E2430] mt-8">
-                <img
-                  src={imageSrc}
-                  alt={`Interface preview of ${caseStudy.title}`}
-                  className="w-full h-full object-cover object-top"
-                  width={1200}
-                  height={750}
-                />
+                {imageSrc && !imageError ? (
+                  <img
+                    src={imageSrc}
+                    alt={`Interface preview of ${caseStudy.title}`}
+                    className="w-full h-full object-cover object-top"
+                    width={1200}
+                    height={750}
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  /* Intentional styled placeholder panel matching ProjectCard */
+                  <div
+                    aria-hidden="true"
+                    className="w-full h-full relative flex flex-col items-center justify-center p-8 text-center hero-grid bg-[#0B0C10]"
+                  >
+                    <div className="w-14 h-14 rounded-xl bg-[#12141C] border border-[#1E2430] flex items-center justify-center mb-3 text-[#38BDF8]">
+                      <span className="font-mono text-lg font-bold">
+                        {caseStudy.index}
+                      </span>
+                    </div>
+                    <p className="font-display font-semibold text-lg text-[#F2F4F8]">
+                      {caseStudy.title}
+                    </p>
+                    <p className="font-mono text-xs text-[#8A90A0] mt-1 uppercase tracking-wider">
+                      Screenshot coming soon
+                    </p>
+                  </div>
+                )}
               </div>
             </header>
 

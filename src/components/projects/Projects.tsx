@@ -22,8 +22,8 @@ export function Projects() {
           </Reveal>
         )}
 
-        {/* 3-Column Grid for Remaining Projects */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* 2-Column Balanced Grid for Remaining 4 Projects */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
           {remainingProjects.map((project, idx) => (
             <Reveal key={project.slug} delay={idx * 0.1}>
               <ProjectCard project={project} />

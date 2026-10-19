@@ -20,7 +20,7 @@ export function MoreProjectsTile() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-mono text-xs text-[#38BDF8] font-bold">
-                  05
+                  06
                 </span>
                 <span className="text-[#1E2430]">·</span>
                 <span className="font-mono text-xs text-[#8A90A0] uppercase">
