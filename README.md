@@ -40,6 +40,7 @@ The website presents my projects, skills, experience and resume. This README cov
 | **Medical RAG Chatbot** | Medical assistant using retrieval-augmented generation with LangChain, Pinecone and Groq (GPT-OSS 20B). Hosted on Cloud Run. | [Live](https://medical-chatbot-1032077414344.asia-south2.run.app) · [Code](https://github.com/OjasPal/Medical-RAG-Chatbot) |
 | **ML-DL Portfolio** | Eleven machine learning and deep learning apps, rebuilt from notebooks into one multi-page Streamlit app. | [Live](https://ojaspal-ml-dl-portfolio.streamlit.app) · [Code](https://github.com/OjasPal/ML-DL-Portfolio) |
 | **EvalAI** | Fine-tuned RoBERTa reward model that predicts which of two LLM responses, generated locally with Ollama (Llama 3.2, Qwen 2.5), a person would prefer. FastAPI backend, Streamlit UI. | [Code](https://github.com/OjasPal/EvalAI) · [Video](https://youtu.be/BvUrBhxuUrc) |
+| **Hirely** | AI career copilot that discovers job opportunities with TinyFish, matches them to a candidate profile, tracks applications in a pipeline and includes a Gemini-powered assistant. React frontend, FastAPI backend, Firebase Auth. Hosted on Cloud Run. | [Live](https://hirely-871878611397.asia-south2.run.app/) · [Code](https://github.com/OjasPal/Hirely) · [Video](https://youtu.be/wb7zaWtM7qE) |
 
 Hosted demos can take a few seconds to wake up on first load.
 
@@ -49,7 +50,7 @@ React 19, TypeScript, Vite 8, Tailwind CSS 4 and Motion, deployed with GitHub Ac
 
 ## Getting started
 
-**Prerequisites:** Node.js 20.19+ or 22.12+ (required by Vite 8) and Git.
+**Prerequisites:** Node.js 22+ (matches production deployment environment) and Git.
 
 ```bash
 git clone https://github.com/OjasPal/OjasPal.github.io.git
@@ -58,7 +59,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Use `npm run build` to create a production build in `dist/`, and `npm run preview` to serve it locally.
+Use `npm run build` to generate the highly optimized production build in `dist/`, and `npm run preview` to serve it locally at http://localhost:4173.
 
 ## Deployment
 
