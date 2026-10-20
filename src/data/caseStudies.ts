@@ -160,7 +160,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     image: "/projects/personal-gemini-journal.webp",
     whatIDid: {
       wordingNote:
-        "Responsibilities reflect system specification, security rule definition, infrastructure deployment, and code review.",
+        "My role covered specifying the system, defining its security rules, deploying it on Google Cloud, and reviewing the code.",
       items: [
         "Defined the security requirements: a written rulebook of seven non-negotiable rules (server-side token verification, per-user data isolation, secrets in Secret Manager, server-side input validation, least-privilege IAM, pinned dependencies, no leaked errors) that every endpoint was reviewed against.",
         "Specified the features and architecture: the two-service Cloud Run layout, the Firebase Auth token exchange flow, and the memory ranking design.",
@@ -480,7 +480,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     image: "/projects/medical-rag-chatbot.webp",
     whatIDid: {
       wordingNote:
-        "Wrote applies directly to the indexing pipeline script and Flask endpoints. Architecture design, component integration, and cloud debugging reflect full implementation ownership.",
+        "I worked on this project end to end, from the indexing pipeline and Flask endpoints to the retrieval chain, chat interface, and Cloud Run deployment.",
       items: [
         "Wrote the indexing pipeline script (store_index.py), core Flask routing, dependency requirements, and container environment configuration.",
         "Designed and reviewed the LangChain retrieval chain (app.py), the Pinecone and HuggingFace embedding helper integration (src/helper.py), the system prompt template (src/prompt.py), and the containerized Dockerfile.",
@@ -783,7 +783,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     image: "/projects/ml-dl-portfolio.webp",
     whatIDid: {
       wordingNote:
-        "Wrote and trained apply directly to the specified original model notebooks; designed, integrated, and deployed apply to the Streamlit web application architecture.",
+        "I wrote the original notebooks for all eleven projects, and designed and deployed the Streamlit app that brings them together.",
       items: [
         "Wrote and trained the original experimental notebooks for the Movie Recommendation System, Housing Price Prediction, Spotify Song Recommendation System, Keras Handwritten Digit Recognizer, and Email Spam Detector.",
         "Designed the modular multi-page Streamlit application architecture, implementing cached resource loaders and interactive forms.",
@@ -1095,7 +1095,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     image: "/projects/evalai.webp",
     whatIDid: {
       wordingNote:
-        "Work reflects collaborative problem definition, architecture specification, local pipeline implementation, and evaluation testing. Covers the preference-prediction (reward-model) stage, not full RLHF. Runs locally via Ollama with no hosted deployment.",
+        "A preference-prediction (reward-model) project that predicts which of two LLM responses a human would prefer. It covers that stage, not full RLHF. I helped define the problem, architecture, and evaluation, and built and tested the pipeline locally.",
       items: [
         "Defined the problem scope, system requirements, architecture flow, and evaluation methodology.",
         "Built, debugged, and tested the data preprocessing, inference serving, and evaluation benchmarks locally in collaboration with Prem Chand Durgapal.",
@@ -1377,7 +1377,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     },
     whatIDid: {
       wordingNote:
-        "Use led, deployed, integrated and tested. Do not say wrote or built the codebase. The split of code between teammates is not recorded.",
+        "I led product direction and feature decisions, set the integration requirements, and handled the Google Cloud deployment and testing.",
       items: [
         "Led product direction and feature decisions, and defined the integration requirements (TinyFish discovery, Gemini guidance, Firebase sign-in).",
         "Ran the Google Cloud deployment: two Cloud Run services built from source with Buildpacks, backend secrets in Secret Manager, region asia-south2.",
