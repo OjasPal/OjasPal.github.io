@@ -50,7 +50,7 @@ React 19, TypeScript, Vite 8, Tailwind CSS 4 and Motion, deployed with GitHub Ac
 
 ## Getting started
 
-**Prerequisites:** Node.js 22+ (matches production deployment environment) and Git.
+**Prerequisites:** Node.js 24+ (matches production deployment environment) and Git.
 
 ```bash
 git clone https://github.com/OjasPal/OjasPal.github.io.git
@@ -63,7 +63,7 @@ Use `npm run build` to generate the highly optimized production build in `dist/`
 
 ## Deployment
 
-Every push to `main` runs the workflow in `.github/workflows/deploy.yml`. It installs dependencies with `npm ci`, builds the site with `npm run build`, and publishes `dist/` to GitHub Pages.
+Every push to `main` runs the workflow in `.github/workflows/deploy.yml`. It installs dependencies with `npm ci`, runs type checking with `npm run typecheck`, builds the site with `npm run build`, and publishes `dist/` to GitHub Pages.
 
 ## Contact
 
