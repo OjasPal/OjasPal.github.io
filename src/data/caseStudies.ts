@@ -1341,7 +1341,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     tagline:
       "An AI career copilot that discovers opportunities, scores your fit and tracks applications in one workspace.",
     plainDescription:
-      "Set up a profile, discover job and career opportunities, see how well each one fits you and why, move applications through a pipeline, and ask a career assistant for guidance. Discovery uses TinyFish, guidance uses Gemini, and sign-in uses Firebase Authentication.",
+      "Set up a profile, discover job and career opportunities, see how well each one fits you and why, check listings with TrustCheck, get a weekly action plan, move applications through a pipeline, and ask a career assistant for guidance. Discovery uses Gemini Search with a Groq fallback, guidance uses Gemini with Groq as a backup, and sign-in uses Firebase Authentication.",
     problemStatement:
       "Job searching is spread across many sites. Judging relevance takes time, applications are easy to lose track of, and repetitive tasks interrupt the process. Hirely brings discovery, fit assessment, tracking and guidance into one workspace.",
     headlineMetrics: [
@@ -1352,10 +1352,10 @@ export const caseStudies: Record<string, CaseStudy> = {
           "Weighted rule-based score: skills 45%, target role 25%, experience 15%, location 10%, interests 5%, with the reasons shown for each match",
       },
       {
-        label: "TinyFish APIs",
-        value: "3",
+        label: "Live search providers",
+        value: "2",
         context:
-          "Search, Fetch and Agent clients in the backend, with curated fallback data",
+          "Gemini Search grounding first, Groq Browser Search as the fallback, then curated data. Only direct posting URLs are kept",
       },
       {
         label: "Cloud Run services",
@@ -1379,7 +1379,7 @@ export const caseStudies: Record<string, CaseStudy> = {
       wordingNote:
         "I led product direction and feature decisions, set the integration requirements, and handled the Google Cloud deployment and testing.",
       items: [
-        "Led product direction and feature decisions, and defined the integration requirements (TinyFish discovery, Gemini guidance, Firebase sign-in).",
+        "Led product direction and feature decisions, and defined the integration requirements (live discovery, Gemini guidance, Firebase sign-in).",
         "Ran the Google Cloud deployment: two Cloud Run services built from source with Buildpacks, backend secrets in Secret Manager, region asia-south2.",
         "Tested the deployed application and resolved the deployment problems listed below.",
         "Built with Aryan Bhardwaj as part of Team Zenophile.",
@@ -1387,14 +1387,14 @@ export const caseStudies: Record<string, CaseStudy> = {
     },
     architecture: {
       summary:
-        "A React app signs users in with Firebase and calls a FastAPI backend that ranks opportunities, discovers them through TinyFish and generates career guidance with Gemini. Two Cloud Run services host the app.",
+        "A React app signs users in with Firebase and calls a FastAPI backend that ranks opportunities, discovers them through Gemini Search with a Groq fallback, checks listing trust, plans weekly actions and generates career guidance with Gemini. Two Cloud Run services host the app.",
       nodes: [
         {
           id: "browser-app",
           label: "React App",
           lane: "Browser",
           responsibility:
-            "Screens for onboarding, discovery, pipeline board, assistant and settings. An AppContext holds UI state. Profile, saved opportunities, applications and email settings are partly kept in localStorage.",
+            "Screens for onboarding, discovery, pipeline board, action planner, assistant and settings. An AppContext holds UI state. Profile, saved opportunities, applications and email settings are partly kept in localStorage.",
           technologies: ["React 19", "TypeScript", "Vite", "React Router"],
           details:
             "Manages client-side routing, user onboarding, opportunity filtering, application pipeline board state, and assistant interactions.",
@@ -1430,10 +1430,10 @@ export const caseStudies: Record<string, CaseStudy> = {
           label: "FastAPI Backend",
           lane: "Backend service",
           responsibility:
-            'Cloud Run service "hirely-backend". Seven routers under /api (profile, search, recommendations, summary, tracker, chat, email) plus a /health route, with CORS.',
+            'Cloud Run service "hirely-backend". Ten routers under /api (profile, search, recommendations, summary, tracker, chat, email, discover, trustcheck, planner) plus /health and /api/health routes, with CORS.',
           technologies: ["FastAPI", "Python", "Uvicorn", "CORS"],
           details:
-            "Main application backend coordinating opportunity retrieval, fit scoring, guidance generation, and application tracking.",
+            "Main application backend coordinating opportunity retrieval, fit scoring, trust checks, weekly planning, guidance generation, and application tracking.",
           sourceLink:
             "https://github.com/OjasPal/Hirely/blob/main/backend/app/main.py",
           isTrustBoundaryGate: true,
@@ -1464,26 +1464,60 @@ export const caseStudies: Record<string, CaseStudy> = {
             "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/matching_service.py",
         },
         {
-          id: "tinyfish-client",
-          label: "TinyFish Client",
+          id: "opportunity-search",
+          label: "Opportunity Search",
           lane: "Backend service",
           responsibility:
-            "Search, Fetch and Agent APIs. HTTP timeouts 15 s, 30 s and 45 s. Falls back to a curated opportunity dataset when TinyFish is not configured or a call fails.",
-          technologies: ["TinyFish API", "HTTP Client", "Curated Fallback"],
+            "Live discovery of job and internship postings. Tries Gemini Search grounding first (gemini-3.8-flash, 35 s timeout), then Groq Browser Search (openai/gpt-oss-20b, 45 s timeout). Both paths keep only links to a single posting, and Gemini results must also be cited by the search grounding. Falls back to the curated opportunity dataset when neither key is set or both calls fail.",
+          technologies: [
+            "Gemini Search grounding",
+            "Groq Browser Search",
+            "HTTP Client",
+            "Curated Fallback",
+          ],
           details:
-            "Discovers and crawls opportunities across the web with configured timeouts and graceful static fallback.",
+            "Discovers current postings across the web with provider fallback, direct-posting URL filtering, and a curated static fallback.",
           sourceLink:
-            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/tinyfish_client.py",
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/opportunity_search_service.py",
+        },
+        {
+          id: "trustcheck-service",
+          label: "TrustCheck",
+          lane: "Backend service",
+          responsibility:
+            "Legitimacy check for a listing. Analyses the domain, scans for risk indicators, reads the public posting page (localhost and private addresses are rejected) and can ask Gemini for a short explanation. Returns verified, unverified or suspicious with a score from 5 to 99, and community scam reports lower the score.",
+          technologies: ["Python", "Rule-Based Scoring", "Gemini API"],
+          details:
+            "Gives students a transparent trust signal before they share personal details with a listing.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/trustcheck_service.py",
+        },
+        {
+          id: "action-planner",
+          label: "Action Planner",
+          lane: "Backend service",
+          responsibility:
+            "Builds a weekly plan of application tasks for a user: gathers candidate opportunities, filters and ranks them, schedules dated tasks and explains the plan. It does not call a language model. Tasks can be updated or deleted through the API.",
+          technologies: ["Python", "SQLAlchemy", "Rule-Based Planning"],
+          details:
+            "Turns saved and recommended opportunities into a scheduled to-do list.",
+          sourceLink:
+            "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/action_planner_service.py",
         },
         {
           id: "gemini-service",
           label: "Hirely Core Assistant",
           lane: "Backend service",
           responsibility:
-            "Career chat. Tries gemini-3.8-flash, then gemini-3.5-flash-lite. 25 s HTTP timeout per call, up to 1,000 output tokens, temperature 0.4. Returns a rule-based local reply if Gemini is unavailable.",
-          technologies: ["Gemini API", "gemini-3.8-flash", "gemini-3.5-flash-lite"],
+            "Career chat. Tries gemini-3.8-flash, then gemini-3.5-flash-lite (15 s HTTP timeout, up to 1,000 output tokens, temperature 0.7), then Groq llama-3.3-70b-versatile (25 s timeout, 1,200 tokens, temperature 0.75). If every provider fails, the API returns an error instead of a canned reply.",
+          technologies: [
+            "Gemini API",
+            "gemini-3.8-flash",
+            "gemini-3.5-flash-lite",
+            "Groq",
+          ],
           details:
-            "Generates contextual career advice, interview tips, and application assistance with automated fallback to secondary model and rule-based local responses.",
+            "Generates contextual career advice, interview tips, and application assistance with automatic fallback to a secondary Gemini model and then Groq.",
           sourceLink:
             "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/gemini_service.py",
         },
@@ -1492,7 +1526,7 @@ export const caseStudies: Record<string, CaseStudy> = {
           label: "Email Service",
           lane: "Backend service",
           responsibility:
-            "Welcome, opportunity and digest emails over SMTP, with Resend settings present in the configuration.",
+            "Welcome, opportunity and digest emails. Resend is the primary transport when configured, with SMTP as the fallback; the deployed service is configured with SMTP.",
           technologies: ["SMTP", "Resend", "Python"],
           details:
             "Dispatches user notifications, onboarding emails, and saved job digests.",
@@ -1537,8 +1571,18 @@ export const caseStudies: Record<string, CaseStudy> = {
         },
         {
           from: "fastapi-api",
-          to: "tinyfish-client",
-          label: "discover and fetch",
+          to: "opportunity-search",
+          label: "discover",
+        },
+        {
+          from: "fastapi-api",
+          to: "trustcheck-service",
+          label: "check listings",
+        },
+        {
+          from: "fastapi-api",
+          to: "action-planner",
+          label: "weekly plan",
         },
         { from: "fastapi-api", to: "gemini-service", label: "career chat" },
         { from: "fastapi-api", to: "email-service", label: "send email" },
@@ -1557,11 +1601,16 @@ export const caseStudies: Record<string, CaseStudy> = {
       },
       {
         context: "Opportunity Discovery and Guidance Strategy",
-        choice: "TinyFish for web discovery and Gemini for generated guidance",
-        alternatives: ["Relying on a language model alone"],
-        rationale: "Keeps discovery separate from response generation.",
+        choice:
+          "Gemini Search grounding for live discovery with Groq Browser Search as the fallback, and Gemini for generated guidance",
+        alternatives: [
+          "TinyFish web discovery, the first provider, replaced because its results were weak",
+          "Relying on a language model alone",
+        ],
+        rationale:
+          "Grounded search gives better live results, and filtering to direct posting URLs keeps discovery separate from response generation.",
         tradeOff:
-          "Two external dependencies and API keys. Curated data and rule-based replies stand in when either is unavailable.",
+          "Two AI providers and API keys. Curated data stands in for discovery when both are unavailable, and chat returns an error if both providers fail.",
       },
       {
         context: "Data Storage Strategy",
@@ -1601,18 +1650,19 @@ export const caseStudies: Record<string, CaseStudy> = {
         "What is in place today, and how the app behaves when an integration is unavailable.",
       rules: [
         "Backend credentials are stored in Google Secret Manager and injected at runtime. Frontend VITE_ values are treated as public and hold no private keys.",
-        "Backend tests: 8 API tests (health, root, profile create and get, resume parsing, search, on-the-fly matching, summaries, tracker flow) plus a separate email test file.",
-        "Graceful degradation: when TinyFish or Gemini is unavailable, the app falls back to curated opportunities and rule-based replies instead of failing.",
+        "Backend tests: 9 API tests (health, root, profile create and get, resume parsing, search, on-the-fly matching, summaries, tracker flow, discover and chat), 7 TrustCheck and Action Planner tests, plus a separate email test file.",
+        "Pages fetched for summaries and TrustCheck must resolve to public hosts; localhost and private addresses are rejected.",
+        "Graceful degradation: when Gemini and Groq cannot return live results, discovery falls back to curated opportunities. Chat tries Gemini, then Groq, and reports an error if both fail instead of showing a canned reply.",
       ],
     },
     limitations: [
       "Sign-in happens in the browser with Firebase. The API does not yet verify the Firebase ID token, so per-user access control is not enforced at the API layer. Server-side token verification is the next step.",
-      "The discovery client calls POST /api/discover, while the FastAPI router exposes search under /api/search. The app falls back to curated data when live discovery is not reachable.",
-      "The chat request is cancelled after 20 s in the browser, while the Gemini client allows 25 s per model attempt. This mismatch is not yet resolved.",
-      "Curated sample opportunities and rule-based replies mean not every result shown is live.",
+      "The browser cancels each chat request after 12 s, while the backend allows 15 s per Gemini request and 25 s for the Groq fallback, so slower replies can be cut off before they arrive.",
+      "Curated sample opportunities mean not every result shown is live. Live search is written for jobs and internships, so other opportunity types are not covered by it.",
       "SQLite in /tmp and browser localStorage are not durable, account-isolated storage.",
       "The Express server and the FastAPI backend both define API routes, so the API surface is duplicated.",
       "Match scores come from hand-written weights. They are not learned from data, and their accuracy has not been evaluated.",
+      "TrustCheck verdicts come from rules, domain lists and an optional Gemini explanation. They are signals, not guarantees, and their accuracy has not been evaluated.",
     ],
     appendix: {
       constants: [
@@ -1630,31 +1680,37 @@ export const caseStudies: Record<string, CaseStudy> = {
         },
         {
           parameter: "Gemini HTTP timeout",
-          value: "25 s",
-          scope: "per model attempt",
+          value: "15 s",
+          scope: "per request",
           notes: "in the backend",
         },
         {
           parameter: "Gemini output limit and temperature",
-          value: "1,000 tokens, 0.4",
+          value: "1,000 tokens, 0.7",
           scope: "chat",
           notes: "in the backend",
         },
         {
+          parameter: "Groq chat fallback",
+          value: "llama-3.3-70b-versatile, 25 s, 1,200 tokens, 0.75",
+          scope: "chat",
+          notes: "used if both Gemini models fail",
+        },
+        {
           parameter: "Chat request timeout",
-          value: "20 s",
-          scope: "browser",
+          value: "12 s",
+          scope: "browser, per attempt",
           notes: "request is aborted",
         },
         {
-          parameter: "TinyFish HTTP timeouts",
-          value: "15 s search, 30 s fetch, 45 s agent",
+          parameter: "Discovery search timeouts",
+          value: "35 s Gemini Search, 45 s Groq Browser Search",
           scope: "backend",
-          notes: "HTTP fallback path",
+          notes: "then curated data",
         },
         {
           parameter: "Discovery client retries",
-          value: "2 retries (3 attempts), 600 ms x attempt delay",
+          value: "1 retry (2 attempts), 8 s per attempt, 400 ms delay",
           scope: "browser",
           notes: "then falls back to curated data",
         },
@@ -1671,6 +1727,12 @@ export const caseStudies: Record<string, CaseStudy> = {
           notes: "tier labels not specified",
         },
         {
+          parameter: "TrustCheck verdicts",
+          value: "verified, unverified, suspicious",
+          scope: "score 5 to 99",
+          notes: "rule-based, optional Gemini explanation",
+        },
+        {
           parameter: "Deployment",
           value: "2 Cloud Run services, asia-south2",
           scope: "hirely and hirely-backend",
@@ -1680,12 +1742,17 @@ export const caseStudies: Record<string, CaseStudy> = {
       models: [
         {
           primary: "gemini-3.8-flash",
-          fallback: "gemini-3.5-flash-lite",
+          fallback: "gemini-3.5-flash-lite, then Groq llama-3.3-70b-versatile",
           role: "Hirely Core career assistant",
+        },
+        {
+          primary: "gemini-3.8-flash (Search grounding)",
+          fallback: "Groq openai/gpt-oss-20b (Browser Search)",
+          role: "Live opportunity discovery",
         },
       ],
       endpointsSummary:
-        "FastAPI mounts seven routers under /api (profile, search, recommendations, summary, tracker, chat, email) plus a /health route.",
+        "FastAPI mounts ten routers under /api (profile, search, recommendations, summary, tracker, chat, email, discover, trustcheck, planner) plus /health and /api/health routes.",
       sourceReferences: [
         {
           label: "frontend/src/context/AppContext.tsx",
@@ -1708,8 +1775,16 @@ export const caseStudies: Record<string, CaseStudy> = {
           url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/matching_service.py",
         },
         {
-          label: "backend/app/services/tinyfish_client.py",
-          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/tinyfish_client.py",
+          label: "backend/app/services/opportunity_search_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/opportunity_search_service.py",
+        },
+        {
+          label: "backend/app/services/trustcheck_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/trustcheck_service.py",
+        },
+        {
+          label: "backend/app/services/action_planner_service.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/app/services/action_planner_service.py",
         },
         {
           label: "backend/app/services/gemini_service.py",
@@ -1726,6 +1801,10 @@ export const caseStudies: Record<string, CaseStudy> = {
         {
           label: "backend/tests/test_api.py",
           url: "https://github.com/OjasPal/Hirely/blob/main/backend/tests/test_api.py",
+        },
+        {
+          label: "backend/tests/test_trustcheck_and_planner.py",
+          url: "https://github.com/OjasPal/Hirely/blob/main/backend/tests/test_trustcheck_and_planner.py",
         },
         {
           label: "backend/Procfile",
