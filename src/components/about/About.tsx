@@ -9,7 +9,7 @@ export function About() {
       id="about"
       index="03"
       title="Background & Engineering Focus"
-      subtitle="Full-cycle Generative AI development: data preprocessing, retrieval, fine-tuning, and production-style cloud serving."
+      subtitle="Generative AI, agentic AI and machine learning, from data preprocessing and retrieval to agent workflows and cloud serving."
     >
       <div className="space-y-12 sm:space-y-16">
         {/* Two Editorial Paragraphs & Action Button */}
@@ -18,16 +18,19 @@ export function About() {
             <div className="lg:col-span-8 space-y-5 text-base sm:text-lg text-[#8A90A0] leading-relaxed">
               <p>
                 I'm Ojas, a third-year B.Tech student in AI & Data Science at USAR,
-                GGSIPU. I like the whole path from data to deployment:
-                preprocessing, retrieval, fine-tuning and serving models in
-                production-style setups on Google Cloud.
+                GGSIPU. I build across generative AI, agentic AI and machine
+                learning, and I like owning the whole path from data to
+                deployment: preprocessing, retrieval, fine-tuning, agent
+                workflows and serving on Google Cloud.
               </p>
               <p>
-                Recent work includes a RAG chatbot over a 637-page medical
-                encyclopedia, an authenticated AI journal with semantic search,
-                eleven models in one live Streamlit app, and a human-preference
-                prediction model. I'm looking for AI/ML internships where I can
-                keep shipping, and I take on select freelance projects.
+                Recent work includes GitResolve, an agent that investigates
+                GitHub issues, verifies its fixes in a sandbox and opens draft
+                pull requests only after a human approves; a RAG chatbot over a
+                medical encyclopedia; an authenticated AI journal; eleven models
+                in one live Streamlit app; and a human-preference prediction
+                model. I'm looking for AI/ML internships where I can keep
+                shipping, and I take on select freelance projects.
               </p>
             </div>
 

@@ -54,11 +54,11 @@ export const profile: Profile = {
   },
   proofStats: [
     {
-      value: "15",
+      value: "16",
       caption: "Featured AI, ML & GenAI Projects",
     },
     {
-      value: "4",
+      value: "5",
       caption: "Live Deployed Apps",
     },
     {

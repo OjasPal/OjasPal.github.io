@@ -20,6 +20,16 @@ export const skillCategories: SkillCategory[] = [
     ],
   },
   {
+    category: "Agentic AI",
+    items: [
+      "LangGraph",
+      "Tool Calling",
+      "Structured Outputs",
+      "Human-in-the-Loop",
+      "Agent Orchestration",
+    ],
+  },
+  {
     category: "ML & Deep Learning",
     items: ["PyTorch", "TensorFlow", "scikit-learn", "OpenCV", "Transformer Models", "Pandas"],
   },

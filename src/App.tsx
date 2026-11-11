@@ -3,6 +3,7 @@ import { Navbar } from "./components/layout/Navbar";
 import { Footer } from "./components/layout/Footer";
 import { Hero } from "./components/hero/Hero";
 import { Projects } from "./components/projects/Projects";
+import { AllProjects } from "./components/projects/AllProjects";
 import { Skills } from "./components/skills/Skills";
 import { About } from "./components/about/About";
 import { Credentials } from "./components/credentials/Credentials";
@@ -34,10 +35,10 @@ export default function App() {
       if (route.targetSection) {
         const timer = setTimeout(() => {
           const element = document.getElementById(route.targetSection!);
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth" });
-          } else if (route.targetSection === "projects" && savedScrollPosition > 0) {
+          if (route.targetSection === "projects" && savedScrollPosition > 0) {
             window.scrollTo({ top: savedScrollPosition, behavior: "instant" });
+          } else if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
           }
         }, 60);
         return () => clearTimeout(timer);
@@ -46,11 +47,12 @@ export default function App() {
   }, [route, savedScrollPosition]);
 
   const isCaseStudy = route.type === "case-study" && currentCaseStudy;
+  const isAllProjects = route.type === "all-projects";
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-[#0B0C10] text-[#F2F4F8] selection:bg-[#38BDF8]/20 selection:text-[#38BDF8] flex flex-col">
-        {/* Navigation Bar (visible on Home view) */}
+        {/* Navigation Bar (visible on Home and All Projects views) */}
         {!isCaseStudy && <Navbar />}
 
         {/* Main Content Landmark */}
@@ -60,6 +62,8 @@ export default function App() {
               caseStudy={currentCaseStudy}
               onBackToProjects={() => navigateToHome("projects")}
             />
+          ) : isAllProjects ? (
+            <AllProjects />
           ) : (
             <>
               {/* Hero Section */}

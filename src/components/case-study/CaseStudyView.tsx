@@ -92,6 +92,17 @@ export function CaseStudyView({
 
   const imageSrc = `${import.meta.env.BASE_URL}${caseStudy.image.replace(/^\//, "")}`;
 
+  const handleBackToProjects = () => {
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("caseStudyOrigin") === "all-projects"
+    ) {
+      window.location.hash = "#/projects";
+      return;
+    }
+    onBackToProjects();
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0C10] text-[#F2F4F8]">
       {/* 1. Slim Top Bar with Reading Progress */}
@@ -99,7 +110,7 @@ export function CaseStudyView({
         <div className="max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           <button
             type="button"
-            onClick={onBackToProjects}
+            onClick={handleBackToProjects}
             className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#8A90A0] hover:text-[#38BDF8] transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -773,7 +784,7 @@ export function CaseStudyView({
               <div className="flex justify-center pt-2">
                 <button
                   type="button"
-                  onClick={onBackToProjects}
+                  onClick={handleBackToProjects}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-[#38BDF8]/60 text-[#F2F4F8] hover:bg-[#38BDF8] hover:text-[#0B0C10] transition-colors text-sm font-semibold cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />

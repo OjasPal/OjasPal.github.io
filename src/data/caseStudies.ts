@@ -116,17 +116,500 @@ export interface CaseStudy {
 }
 
 export const projectOrder = [
+  "gitresolve",
+  "ml-dl-portfolio",
+  "hirely",
   "personal-gemini-journal",
   "medical-rag-chatbot",
-  "ml-dl-portfolio",
   "evalai",
-  "hirely",
 ];
 
 export const caseStudies: Record<string, CaseStudy> = {
+  gitresolve: {
+    slug: "gitresolve",
+    index: "01",
+    title: "GitResolve",
+    period: "November 2026",
+    domainTag: "Agentic AI & Developer Tooling",
+    tagline:
+      "An agent that investigates GitHub issues, verifies fixes in a Docker sandbox and opens draft pull requests only after a human approves.",
+    plainDescription:
+      "Give GitResolve a GitHub issue or a bug report for a Python repository. It builds an investigation plan for you to approve, reproduces the failure, proposes a patch and checks it inside an isolated Docker sandbox. Only after you approve the exact diff does it open a draft pull request on GitHub. It never merges anything.",
+    problemStatement:
+      "Automated code-fixing tools can produce patches that look right but are untested or out of scope. GitResolve treats model output as untrusted: a patch only moves forward with test evidence from a sandbox, deterministic scope checks and explicit human approval at two points.",
+    headlineMetrics: [
+      {
+        label: "Human gates",
+        value: "2",
+        context:
+          "Plan approval before any repair work, then approval of the exact diff, which is bound to its SHA-256 hash",
+      },
+      {
+        label: "Agent tools",
+        value: "14",
+        context:
+          "Schema-validated actions the repair agent can take, such as reading files, running tests and editing files",
+      },
+      {
+        label: "Test functions",
+        value: "392",
+        context:
+          "Across 69 test files covering the API, worker, sandbox, GitHub integration and agent recovery",
+      },
+    ],
+    links: {
+      live: "https://gitresolve-agent.vercel.app/",
+      code: "https://github.com/OjasPal/GitResolve",
+      video: null,
+    },
+    image: "/projects/gitresolve.webp",
+    whatIDid: {
+      wordingNote:
+        "I designed and specified the system, reviewed and tested the backend services, workflows and web interface, and deployed the application across Vercel, Cloud Run and Compute Engine.",
+      items: [
+        "Designed the system: product and technical requirements, the safety boundaries and the task state machine.",
+        "Specified and reviewed the backend services, the Firestore worker-lease handling and the LangGraph workflows, and tested them.",
+        "Specified the web interface and tested it manually.",
+        "Set up and ran the deployment: the web app on Vercel, the API on Cloud Run and a Docker-enabled worker on a Compute Engine VM.",
+      ],
+    },
+    architecture: {
+      summary:
+        "A Next.js app talks to a FastAPI control plane. A worker on a Compute Engine VM claims tasks through Firestore, plans with a LangGraph workflow, pauses for human approval, repairs code inside a Docker sandbox and publishes a draft pull request only after the exact diff is approved.",
+      nodes: [
+        {
+          id: "web-client",
+          label: "Next.js web app",
+          lane: "Browser",
+          responsibility:
+            "Hosted on Vercel. Firebase Google sign-in, GitHub installation flow, task timeline, plan review conversation and diff inspection.",
+          technologies: ["Next.js 14", "Vercel", "Firebase Google sign-in"],
+          details:
+            "Provides the browser interface for authentication, repository installation, task timeline tracking, plan discussion and diff review.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/frontend/src/components/EventTimeline.tsx",
+        },
+        {
+          id: "api",
+          label: "FastAPI control plane",
+          lane: "Control plane",
+          responsibility:
+            "Cloud Run service with a versioned REST API: validation, ownership checks, task lifecycle and events. Verifies a signed session token on user requests. Per-IP limit of 300 requests a minute and 30 write actions a minute per user, a request-size limit and security headers. Never executes repository code.",
+          technologies: ["FastAPI", "Python 3.12", "Google Cloud Run"],
+          details:
+            "Validates session tokens, ownership and rate limits on the control plane without ever running untrusted repository code.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/main.py",
+        },
+        {
+          id: "human-gates",
+          label: "Human approval gates",
+          lane: "Control plane",
+          responsibility:
+            "Gate 1: the developer reviews and can discuss the investigation plan before any repair starts. Gate 2: the developer approves the exact verified diff. Approval is stored against the SHA-256 hash of the diff, and a changed diff is rejected with a conflict.",
+          technologies: ["SHA-256 diff binding", "Plan review", "Diff approval"],
+          details:
+            "Holds execution at two explicit human checkpoints and binds diff approval to the SHA-256 hash of the reviewed patch.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/task_service.py",
+          isTrustBoundaryGate: true,
+        },
+        {
+          id: "worker",
+          label: "Agent worker",
+          lane: "Worker VM",
+          responsibility:
+            "Runs on a Compute Engine e2-standard-4 VM with a local Docker daemon. Claims tasks with a transactional lease (90 seconds, renewed by heartbeat) and runs the plan, execute and publish phases.",
+          technologies: [
+            "Compute Engine (e2-standard-4)",
+            "Python 3.12",
+            "Docker",
+            "Firestore leases",
+          ],
+          details:
+            "Coordinates task claiming via 90-second heartbeat leases and runs the planning, repair and publication lifecycle.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/worker_service.py",
+        },
+        {
+          id: "planner-graph",
+          label: "LangGraph planning workflow",
+          lane: "Worker VM",
+          responsibility:
+            "Six nodes: analyze issue, create plan, spec, acceptance criteria, file plan, await start. Produces a structured plan with a budget, which is hashed.",
+          technologies: ["LangGraph", "Python 3.12"],
+          details:
+            "Steps through six planning nodes to build a hashed investigation plan and budget before pausing for human approval.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/agent/graph.py",
+        },
+        {
+          id: "repair-engine",
+          label: "LangGraph repair engine",
+          lane: "Worker VM",
+          responsibility:
+            "A tool-using loop with 14 schema-validated actions, durable checkpoints (SQLite or Firestore) with lease fencing, and budgets of 6 repair attempts and 50 model calls per task.",
+          technologies: ["LangGraph", "SQLite", "Firestore"],
+          details:
+            "Executes the bounded repair loop with 14 schema-validated tools, lease-fenced checkpoints and strict call ceilings.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/agent/graph_engine/engine.py",
+        },
+        {
+          id: "model-router",
+          label: "ModelRouter",
+          lane: "Worker VM",
+          responsibility:
+            "Routes model calls to Gemini Flash models with a fallback model and a separate specialist tier, per-node reasoning levels and timeouts, bounded retries and per-model circuit breakers.",
+          technologies: [
+            "Gemini API",
+            "gemini-3.8-flash",
+            "gemini-3.6-flash",
+            "gemini-4-argon",
+          ],
+          details:
+            "Manages model selection, fallback routing, per-node timeouts, retries and circuit breakers across planning and repair calls.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/agent/router.py",
+        },
+        {
+          id: "sandbox",
+          label: "Docker sandbox",
+          lane: "Worker VM",
+          responsibility:
+            "Runs baseline tests, reproduction and patch verification on a pinned repository snapshot. Containers run as a non-root user with network disabled, a read-only filesystem, all capabilities dropped, no-new-privileges, 2 GB memory, 2 CPUs and a 256-process limit.",
+          technologies: ["Docker", "pytest", "Streamlit AppTest"],
+          details:
+            "Isolates untrusted repository test execution in no-network, read-only containers with dropped capabilities and resource caps.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/sandbox/runner.py",
+        },
+        {
+          id: "policy-gate",
+          label: "Deterministic policy gate",
+          lane: "Worker VM",
+          responsibility:
+            "Checks the final diff and the plan scope: protected paths, file and line caps, dependency rules and verification receipts. Model confidence does not decide.",
+          technologies: ["Python 3.12", "Diff & scope validation"],
+          details:
+            "Enforces deterministic checks over protected paths, line limits, dependency rules and sandbox verification receipts.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/policy.py",
+        },
+        {
+          id: "firestore",
+          label: "Cloud Firestore",
+          lane: "Data and external services",
+          responsibility:
+            "Task state, events and worker leases, with transactions. Firestore rules deny all direct client access, so only the server touches it.",
+          technologies: ["Cloud Firestore", "Firestore Rules"],
+          details:
+            "Stores transactional task state, timeline events and worker leases with all direct client access denied.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/deploy/firestore.rules",
+        },
+        {
+          id: "gemini",
+          label: "Gemini models",
+          lane: "Data and external services",
+          responsibility: "Google GenAI models used for planning and repair.",
+          technologies: [
+            "Gemini API",
+            "gemini-3.8-flash",
+            "gemini-3.6-flash",
+            "gemini-4-argon",
+          ],
+          details:
+            "Serves model completions for issue analysis, planning, repair actions, reflection and diagnosis.",
+        },
+        {
+          id: "github-publisher",
+          label: "GitHub publisher",
+          lane: "Data and external services",
+          responsibility:
+            "GitHub App with installation-scoped tokens. Re-validates the approved diff hash, the base commit and the verification receipt, creates a new branch (never force-updating an existing one), commits the patch and opens a draft pull request.",
+          technologies: ["GitHub App", "SHA-256 verification"],
+          details:
+            "Re-checks the approved diff hash, base commit and verification receipt before creating a branch and opening a draft pull request.",
+          sourceLink:
+            "https://github.com/OjasPal/GitResolve/blob/main/backend/app/worker/github_pr.py",
+        },
+      ],
+      edges: [
+        { from: "web-client", to: "api", label: "REST with a session token" },
+        { from: "api", to: "firestore", label: "task state and events" },
+        { from: "worker", to: "firestore", label: "claim lease, heartbeat" },
+        { from: "worker", to: "planner-graph", label: "plan phase" },
+        { from: "planner-graph", to: "human-gates", label: "plan for approval" },
+        {
+          from: "human-gates",
+          to: "repair-engine",
+          label: "approved plan starts repair",
+        },
+        { from: "repair-engine", to: "model-router", label: "model calls" },
+        { from: "model-router", to: "gemini", label: "Gemini Flash models" },
+        { from: "repair-engine", to: "sandbox", label: "run tests, apply patch" },
+        { from: "sandbox", to: "policy-gate", label: "verification receipt" },
+        {
+          from: "policy-gate",
+          to: "human-gates",
+          label: "verified diff for approval",
+        },
+        {
+          from: "human-gates",
+          to: "github-publisher",
+          label: "approved diff hash",
+        },
+      ],
+    },
+    decisions: [
+      {
+        context: "How much autonomy to give an agent that changes code",
+        choice:
+          "Two human gates: approve the plan, then approve the exact verified diff",
+        alternatives: ["Full autonomy"],
+        rationale:
+          "Prevents unverified or hallucinated patches from reaching a repository.",
+        tradeOff:
+          "A person must be in the loop on every run, so it is slower than a fully automatic flow.",
+      },
+      {
+        context: "Where to run untrusted repository code",
+        choice:
+          "A dedicated Compute Engine VM with a local Docker daemon for the worker, with the API kept on Cloud Run",
+        alternatives: ["Running the worker on Cloud Run"],
+        rationale:
+          "Cloud Run cannot host a Docker daemon for sandboxed execution of untrusted code.",
+        tradeOff:
+          "The VM does not scale to zero, so it costs money while idle and is shut down manually.",
+      },
+      {
+        context: "How workers coordinate",
+        choice:
+          "Firestore document transactions, with 90-second leases renewed by heartbeat",
+        alternatives: ["Redis or Celery"],
+        rationale: "Avoids running extra queue infrastructure.",
+        tradeOff:
+          "Firestore transactions require all reads before writes, which caused a bug during task completion (see problems solved).",
+      },
+      {
+        context: "How to call language models",
+        choice:
+          "Gemini Flash models behind a ModelRouter with a fallback model, per-node reasoning levels, timeouts and task budgets",
+        alternatives: ["A single frontier model"],
+        rationale: "Reduces cost and latency within strict budgets.",
+        tradeOff:
+          "More routing logic to maintain: retries, circuit breakers and budget tracking.",
+      },
+      {
+        context: "What decides whether a patch is published",
+        choice:
+          "Deterministic scope and diff checks, verification receipts and human approval",
+        alternatives: ["Trusting the model's own confidence"],
+        rationale:
+          "Model output and repository contents are treated as untrusted input.",
+        tradeOff:
+          "Patches that exceed the checks are rejected or retried even when the model is confident.",
+      },
+    ],
+    problemsSolved: [
+      {
+        issue:
+          "Task completion failed with a Firestore read-after-write error",
+        rootCause:
+          "The worker transaction wrote the lease release before reading the task state.",
+        resolution:
+          "Enforced a strict read-before-write order in the worker service.",
+      },
+      {
+        issue:
+          "Raw internal error identifiers showed up in the interface when a run failed",
+        rootCause:
+          "Exceptions passed internal trace identifiers straight into timeline events.",
+        resolution:
+          "Sanitized the error payloads in the event timeline component while keeping the backend audit logs.",
+      },
+      {
+        issue: "Running repository tests without internet access",
+        rootCause:
+          "Dependencies were needed, but the sandbox must not have network access.",
+        resolution:
+          "Dependencies are prepared before the run so the container can execute with networking disabled.",
+      },
+    ],
+    securityAndQuality: {
+      summary:
+        "How the system limits what the agent can do, and how its behaviour is checked.",
+      rules: [
+        "Repository code runs only in Docker containers with networking disabled, a read-only filesystem, all Linux capabilities dropped, no-new-privileges, 2 GB of memory, 2 CPUs and a 256-process limit.",
+        "Model output and repository content are treated as untrusted. Deterministic scope and diff checks, verification receipts and the two human gates decide whether anything is published.",
+        "Approval is bound to the SHA-256 hash of the exact diff that was reviewed. A different diff is rejected, and publication re-checks the hash, the base commit and the verification receipt. Fix branches are never force-updated.",
+        "Firestore denies all direct client access, and the API applies per-IP and per-user rate limits.",
+        "392 test functions across 69 test files cover the API, worker, sandbox, GitHub integration and agent recovery.",
+      ],
+    },
+    limitations: [
+      "Supports Python 3.12 repositories on Linux x86-64 that use pytest or Streamlit AppTest.",
+      "The worker VM does not scale to zero. To avoid idle cost it is shut down manually, so repair runs are only available while it is running.",
+      "Cannot handle applications that need external databases, other services or GPUs.",
+      "The fix success rate has not been measured on a public benchmark such as SWE-bench, so no resolution rate is claimed.",
+    ],
+    appendix: {
+      constants: [
+        {
+          parameter: "Repair attempts per task",
+          value: "6 (configurable from 1 to 12)",
+          scope: "repair loop",
+          notes: "backend configuration",
+        },
+        {
+          parameter: "Model calls per task",
+          value: "50",
+          scope: "budget",
+          notes: "backend configuration",
+        },
+        {
+          parameter: "Tool-call ceiling",
+          value: "120",
+          scope: "repair engine",
+          notes: "default budget",
+        },
+        {
+          parameter: "Task timeout",
+          value: "30 minutes",
+          scope: "per task",
+          notes: "backend configuration",
+        },
+        {
+          parameter: "Sandbox command timeout",
+          value: "60 s by default, 300 s maximum",
+          scope: "per command",
+          notes: "sandbox request model",
+        },
+        {
+          parameter: "Worker lease",
+          value: "90 s, renewed by heartbeat",
+          scope: "worker",
+          notes: "Firestore transaction",
+        },
+        {
+          parameter: "Sandbox limits",
+          value:
+            "2 GB memory, 2 CPUs, 256 processes, 256 MB /tmp, 1 GB /workspace",
+          scope: "per container",
+          notes: "Docker run arguments",
+        },
+        {
+          parameter: "Sandbox flags",
+          value:
+            "network none, read-only filesystem, all capabilities dropped, no-new-privileges, non-root user",
+          scope: "per container",
+          notes: "Docker run arguments",
+        },
+        {
+          parameter: "Diff limit",
+          value:
+            "150 lines by default, up to 400 when deletions are explicitly allowed",
+          scope: "final diff",
+          notes: "sandbox request model",
+        },
+        {
+          parameter: "Rate limits",
+          value: "300 requests a minute per IP, 30 write actions a minute per user",
+          scope: "API",
+          notes: "backend configuration",
+        },
+        {
+          parameter: "Observed repair run time",
+          value: "3 to 8 minutes",
+          scope: "live end-to-end runs",
+          notes: "not a formal benchmark",
+        },
+        {
+          parameter: "Worker VM",
+          value: "e2-standard-4 (4 vCPU, 16 GB RAM)",
+          scope: "Compute Engine",
+          notes: "README",
+        },
+        {
+          parameter: "Runtime",
+          value: "Python 3.12, Next.js 14",
+          scope: "backend and frontend",
+          notes: "README",
+        },
+      ],
+      models: [
+        {
+          primary: "gemini-3.8-flash",
+          fallback: "gemini-3.6-flash",
+          role: "Planning and repair calls routed by ModelRouter; a separate specialist tier (gemini-4-argon) handles reflection and diagnosis",
+        },
+      ],
+      endpointsSummary:
+        "A versioned FastAPI REST API for the task lifecycle, plan and diff approval, GitHub repository access and task events.",
+      sourceReferences: [
+        {
+          label: "README.md",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/README.md",
+        },
+        {
+          label: "agent/graph.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/agent/graph.py",
+        },
+        {
+          label: "agent/router.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/agent/router.py",
+        },
+        {
+          label: "agent/config.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/agent/config.py",
+        },
+        {
+          label: "backend/app/agent/graph_engine/engine.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/agent/graph_engine/engine.py",
+        },
+        {
+          label: "backend/app/agent/graph_engine/tools.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/agent/graph_engine/tools.py",
+        },
+        {
+          label: "backend/app/services/worker_service.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/worker_service.py",
+        },
+        {
+          label: "backend/app/services/policy.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/policy.py",
+        },
+        {
+          label: "backend/app/services/task_service.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/services/task_service.py",
+        },
+        {
+          label: "backend/app/worker/github_pr.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/app/worker/github_pr.py",
+        },
+        {
+          label: "sandbox/runner.py",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/sandbox/runner.py",
+        },
+        {
+          label: "backend/deploy/firestore.rules",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/backend/deploy/firestore.rules",
+        },
+        {
+          label: "frontend/src/components/EventTimeline.tsx",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/frontend/src/components/EventTimeline.tsx",
+        },
+        {
+          label: "docs/GitResolve_TRD.md",
+          url: "https://github.com/OjasPal/GitResolve/blob/main/docs/GitResolve_TRD.md",
+        },
+      ],
+    },
+  },
   "personal-gemini-journal": {
     slug: "personal-gemini-journal",
-    index: "01",
+    index: "04",
     title: "Personal Gemini Journal",
     period: "September 2026",
     domainTag: "Generative AI & Cloud Architecture",
@@ -442,7 +925,7 @@ export const caseStudies: Record<string, CaseStudy> = {
 
   "medical-rag-chatbot": {
     slug: "medical-rag-chatbot",
-    index: "02",
+    index: "05",
     title: "Medical RAG Chatbot",
     period: "September 2026",
     domainTag: "Retrieval-Augmented Generation & Healthcare NLP",
@@ -745,7 +1228,7 @@ export const caseStudies: Record<string, CaseStudy> = {
 
   "ml-dl-portfolio": {
     slug: "ml-dl-portfolio",
-    index: "03",
+    index: "02",
     title: "ML & DL Project Portfolio",
     period: "October 2026",
     domainTag: "Applied Machine Learning & Deep Learning",
@@ -1049,7 +1532,7 @@ export const caseStudies: Record<string, CaseStudy> = {
 
   "evalai": {
     slug: "evalai",
-    index: "04",
+    index: "06",
     title: "EvalAI",
     period: "August 2026",
     domainTag: "AI Alignment & Reward Modeling",
@@ -1334,7 +1817,7 @@ export const caseStudies: Record<string, CaseStudy> = {
   },
   hirely: {
     slug: "hirely",
-    index: "05",
+    index: "03",
     title: "Hirely",
     period: "October 2026",
     domainTag: "AI Product & Full-Stack Cloud",

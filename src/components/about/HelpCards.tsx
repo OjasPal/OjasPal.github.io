@@ -1,4 +1,4 @@
-import { Layers, ShieldCheck, MonitorPlay } from "lucide-react";
+import { Layers, Workflow, ShieldCheck, MonitorPlay } from "lucide-react";
 import { SpotlightSurface } from "../ui/SpotlightSurface";
 import { TiltCard } from "../ui/TiltCard";
 
@@ -7,8 +7,15 @@ const helpTopics = [
     icon: Layers,
     title: "RAG chatbots over your documents",
     description:
-      "Chunking, embeddings, vector search, and grounded answers, like the Medical RAG Chatbot grounded in 637 pages.",
+      "Chunking, embeddings, vector search and retrieval-backed answers, like the Medical RAG Chatbot.",
     reference: "Medical RAG Chatbot",
+  },
+  {
+    icon: Workflow,
+    title: "Agentic workflows with human approval",
+    description:
+      "Tool-using agents with planning, sandboxed verification and approval gates before anything ships, like GitResolve.",
+    reference: "GitResolve",
   },
   {
     icon: ShieldCheck,
@@ -28,7 +35,7 @@ const helpTopics = [
 
 export function HelpCards() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 pt-6">
       {helpTopics.map((item, idx) => {
         const Icon = item.icon;
         return (
