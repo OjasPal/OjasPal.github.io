@@ -103,6 +103,19 @@ export function CaseStudyView({
     onBackToProjects();
   };
 
+  const handleTocClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string
+  ) => {
+    e.preventDefault();
+    setActiveTocId(sectionId);
+    const el = document.getElementById(sectionId);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0C10] text-[#F2F4F8]">
       {/* 1. Slim Top Bar with Reading Progress */}
@@ -153,6 +166,7 @@ export function CaseStudyView({
             <a
               key={item.id}
               href={`#${item.id}`}
+              onClick={(e) => handleTocClick(e, item.id)}
               className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${
                 activeTocId === item.id
                   ? "bg-[#38BDF8]/15 text-[#38BDF8] border border-[#38BDF8]/30 font-semibold"
@@ -812,6 +826,7 @@ export function CaseStudyView({
                       <a
                         key={item.id}
                         href={`#${item.id}`}
+                        onClick={(e) => handleTocClick(e, item.id)}
                         className={`block text-xs py-1.5 px-2 rounded-md font-mono transition-colors ${
                           isActive
                             ? "bg-[#38BDF8]/10 text-[#38BDF8] font-semibold border-l-2 border-[#38BDF8]"
@@ -827,7 +842,7 @@ export function CaseStudyView({
                 <div className="mt-6 pt-4 border-t border-[#1E2430]">
                   <button
                     type="button"
-                    onClick={onBackToProjects}
+                    onClick={handleBackToProjects}
                     className="w-full py-2 px-3 rounded-lg text-xs font-mono font-medium text-center text-[#8A90A0] hover:text-[#38BDF8] border border-[#1E2430] hover:border-[#38BDF8]/40 transition-colors cursor-pointer"
                   >
                     ← All Projects
