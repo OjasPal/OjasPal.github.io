@@ -44,7 +44,7 @@ export const projects: Project[] = [
     links: {
       live: "https://gitresolve-agent.vercel.app/",
       code: "https://github.com/OjasPal/GitResolve",
-      video: null,
+      video: "https://youtu.be/kd_3Lb1vapY",
     },
   },
   {
